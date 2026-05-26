@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.0.0...v1.1.0) (2026-05-26)
+
+
+### Features
+
+* **sample:** console end-to-end demo ([a3977bc](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/a3977bc094657f757d217b0553d9b145f6d91243))
+
+
+### Tests
+
+* **aot:** smoke binary exercises one feature end-to-end under PublishAot=true ([c51b8cc](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/c51b8ccbf3be2aa07cd73933ef13ab7d874fd2ec))
+
 ## 1.0.0 (2026-05-26)
 
 
