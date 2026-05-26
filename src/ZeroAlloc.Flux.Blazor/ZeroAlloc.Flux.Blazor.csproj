@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>ZeroAlloc.Flux.Blazor</RootNamespace>
+    <PackageId>ZeroAlloc.Flux.Blazor</PackageId>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Description>Blazor host adapter for ZeroAlloc.Flux — FluxComponent base class and DI extensions.</Description>
+    <PackageTags>flux;blazor;state-management;source-generator;zero-allocation</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+</Project>
