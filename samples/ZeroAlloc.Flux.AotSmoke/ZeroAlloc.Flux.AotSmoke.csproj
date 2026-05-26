@@ -8,6 +8,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />
+    <ProjectReference Include="..\..\src\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
   </ItemGroup>
 </Project>
