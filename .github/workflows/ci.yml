@@ -44,11 +44,7 @@ jobs:
       - name: Pack
         run: |
           dotnet pack src/ZeroAlloc.Flux/ZeroAlloc.Flux.csproj --no-build -c Release -p:PackageVersion=${{ steps.gitversion.outputs.version }} -o ./artifacts
-          dotnet pack src/ZeroAlloc.Flux.Generator/ZeroAlloc.Flux.Generator.csproj --no-build -c Release -p:PackageVersion=${{ steps.gitversion.outputs.version }} -o ./artifacts
           dotnet pack src/ZeroAlloc.Flux.Blazor/ZeroAlloc.Flux.Blazor.csproj --no-build -c Release -p:PackageVersion=${{ steps.gitversion.outputs.version }} -o ./artifacts
-
-      - name: Verify generator pack layout
-        run: bash scripts/verify-generator-pack-layout.sh ./artifacts
 
   aot-smoke:
     runs-on: ubuntu-latest
