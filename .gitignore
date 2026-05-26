@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Build / pack output
+artifacts/
+*.nupkg
+*.snupkg
+
+# AOT publish
+aot-out/
+
+# Test results
+TestResults/
+*.trx
+coverage.*
+
+# JetBrains
+.idea/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
