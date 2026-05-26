@@ -16,4 +16,17 @@
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\ZeroAlloc.Flux.Generator\bin\$(Configuration)\netstandard2.0\ZeroAlloc.Flux.Generator.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
+  </ItemGroup>
 </Project>
