@@ -21,3 +21,13 @@ public static partial class CounterReducers
     [Reducer]
     public static CounterState On(CounterState state, ResetAction _) => new(0);
 }
+
+[Feature]
+public readonly partial record struct BadgeCountState(int Count);
+
+public static partial class BadgeReducers
+{
+    [Reducer]
+    public static BadgeCountState On(BadgeCountState state, IncrementAction action)
+        => state with { Count = state.Count + action.Amount };
+}
