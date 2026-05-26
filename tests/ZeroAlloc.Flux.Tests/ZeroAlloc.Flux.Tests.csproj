@@ -3,9 +3,15 @@
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\generated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />
+    <ProjectReference Include="..\..\src\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
