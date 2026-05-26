@@ -3,3 +3,5 @@ ZeroAlloc.Flux.FeatureAttribute
 ZeroAlloc.Flux.FeatureAttribute.FeatureAttribute() -> void
 ZeroAlloc.Flux.FeatureAttribute.InitialState.get -> string?
 ZeroAlloc.Flux.FeatureAttribute.InitialState.set -> void
+ZeroAlloc.Flux.ReducerAttribute
+ZeroAlloc.Flux.ReducerAttribute.ReducerAttribute() -> void
