@@ -39,4 +39,23 @@ public sealed class RuntimeTests
         Assert.Equal(3, counter.Value.Count);
         Assert.Equal(3, badge.Value.Count);
     }
+
+    [Fact]
+    public async Task DispatchAsync_FiresStateChanged_OnceWithNewState()
+    {
+        var services = new ServiceCollection();
+        services.AddZeroAllocFlux();
+        using var sp = services.BuildServiceProvider();
+
+        var dispatcher = sp.GetRequiredService<IDispatcher>();
+        var counter = sp.GetRequiredService<IStore<CounterState>>();
+
+        var invocations = new System.Collections.Generic.List<CounterState>();
+        counter.StateChanged += state => invocations.Add(state);
+
+        await dispatcher.DispatchAsync(new IncrementAction(7));
+
+        Assert.Single(invocations);
+        Assert.Equal(7, invocations[0].Count);
+    }
 }
