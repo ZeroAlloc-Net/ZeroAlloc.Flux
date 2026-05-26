@@ -41,6 +41,23 @@ public sealed class RuntimeTests
     }
 
     [Fact]
+    public async Task DispatchAsync_ClassState_UpdatesViaCAS()
+    {
+        var services = new ServiceCollection();
+        services.AddZeroAllocFlux();
+        using var sp = services.BuildServiceProvider();
+
+        var dispatcher = sp.GetRequiredService<IDispatcher>();
+        var settings = sp.GetRequiredService<IStore<SettingsState>>();
+
+        Assert.Equal("default", settings.Value.Theme);   // initial state via ctor
+
+        await dispatcher.DispatchAsync(new UpdateThemeAction("dark"));
+
+        Assert.Equal("dark", settings.Value.Theme);
+    }
+
+    [Fact]
     public async Task DispatchAsync_FiresStateChanged_OnceWithNewState()
     {
         var services = new ServiceCollection();

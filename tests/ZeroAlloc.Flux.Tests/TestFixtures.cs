@@ -31,3 +31,18 @@ public static partial class BadgeReducers
     public static BadgeCountState On(BadgeCountState state, IncrementAction action)
         => state with { Count = state.Count + action.Amount };
 }
+
+[Feature]
+public sealed partial record SettingsState(string Theme)
+{
+    public SettingsState() : this("default") { }
+}
+
+public readonly record struct UpdateThemeAction(string NewTheme);
+
+public static partial class SettingsReducers
+{
+    [Reducer]
+    public static SettingsState On(SettingsState state, UpdateThemeAction action)
+        => state with { Theme = action.NewTheme };
+}
