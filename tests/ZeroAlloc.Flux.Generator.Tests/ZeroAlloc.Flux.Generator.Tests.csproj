@@ -6,6 +6,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj" />
+    <!-- Reference Flux runtime so the TestHarness can force-load the [Feature]/[Reducer]
+         attribute assembly into the AppDomain — fixture compilations need to bind those
+         symbols. -->
+    <ProjectReference Include="..\..\src\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -14,5 +18,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="Verify.Xunit" Version="28.0.0" />
+    <PackageReference Include="Verify.SourceGenerators" Version="2.5.0" />
   </ItemGroup>
 </Project>
