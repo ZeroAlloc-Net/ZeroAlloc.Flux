@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ZeroAlloc.Flux/ZeroAlloc.Flux.csproj" />
+    <Project Path="src/ZeroAlloc.Flux.Generator/ZeroAlloc.Flux.Generator.csproj" />
+    <Project Path="src/ZeroAlloc.Flux.Blazor/ZeroAlloc.Flux.Blazor.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZeroAlloc.Flux.Tests/ZeroAlloc.Flux.Tests.csproj" />
+    <Project Path="tests/ZeroAlloc.Flux.Generator.Tests/ZeroAlloc.Flux.Generator.Tests.csproj" />
+    <Project Path="tests/ZeroAlloc.Flux.Blazor.Tests/ZeroAlloc.Flux.Blazor.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/ZeroAlloc.Flux.Sample/ZeroAlloc.Flux.Sample.csproj" />
+    <Project Path="samples/ZeroAlloc.Flux.AotSmoke/ZeroAlloc.Flux.AotSmoke.csproj" />
+  </Folder>
+</Solution>
