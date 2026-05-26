@@ -1,1 +1,9 @@
 #nullable enable
+ZeroAlloc.Flux.Blazor.FluxBlazorServiceCollectionExtensions
+ZeroAlloc.Flux.Blazor.FluxComponent
+ZeroAlloc.Flux.Blazor.FluxComponent.FluxComponent() -> void
+ZeroAlloc.Flux.Blazor.FluxComponent.Dispose() -> void
+override ZeroAlloc.Flux.Blazor.FluxComponent.OnInitialized() -> void
+virtual ZeroAlloc.Flux.Blazor.FluxComponent.SubscribeStores() -> void
+ZeroAlloc.Flux.Blazor.FluxComponent.Subscribe<TState>(ZeroAlloc.Flux.IStore<TState>! store, System.Action<TState>? onChange = null) -> void
+static ZeroAlloc.Flux.Blazor.FluxBlazorServiceCollectionExtensions.AddZeroAllocFluxBlazor(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
