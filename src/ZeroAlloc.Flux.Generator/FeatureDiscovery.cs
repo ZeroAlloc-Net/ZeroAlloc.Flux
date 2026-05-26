@@ -70,6 +70,12 @@ internal static class FeatureDiscovery
                     info.TypeSymbol.Locations.Length > 0 ? info.TypeSymbol.Locations[0] : Location.None,
                     info.FullyQualifiedName));
             }
+
+            if (info.InitialStateFactoryName is not null)
+            {
+                var diag = InitialStateValidator.Validate(info.TypeSymbol, info.InitialStateFactoryName, compilation);
+                if (diag is not null) diagnostics.Add(diag);
+            }
         }
 
         return (features.ToImmutable(), diagnostics.ToImmutable());
