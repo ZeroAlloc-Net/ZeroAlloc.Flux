@@ -5,3 +5,6 @@ ZeroAlloc.Flux.FeatureAttribute.InitialState.get -> string?
 ZeroAlloc.Flux.FeatureAttribute.InitialState.set -> void
 ZeroAlloc.Flux.ReducerAttribute
 ZeroAlloc.Flux.ReducerAttribute.ReducerAttribute() -> void
+ZeroAlloc.Flux.IStore<TState>
+ZeroAlloc.Flux.IStore<TState>.StateChanged -> System.Action<TState>!
+ZeroAlloc.Flux.IStore<TState>.Value.get -> TState
