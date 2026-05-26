@@ -1,0 +1,80 @@
+name: Publish from manifest
+
+# Manually-triggered rescue workflow that packs and pushes every src/ project
+# at the version recorded in .release-please-manifest.json. Designed for the
+# case where release-please created the GitHub release/tag but the publish job
+# missed a sub-package (e.g. the hardcoded pack list in release-please.yml is
+# stale and a new sub-package is missing). --skip-duplicate makes re-runs safe.
+#
+# Per-component versioning: each src/*/*.csproj is packed at the version
+# from the LONGEST matching manifest key prefix. Example:
+#   src/ZeroAlloc.Flux.Blazor/X.csproj  -> uses key "src/ZeroAlloc.Flux.Blazor"
+#   src/ZeroAlloc.Flux/X.csproj         -> falls back to key "."
+# This survives release-please's multi-package manifest split (where the
+# Blazor extension versions independently from Flux core).
+#
+# Usage:  gh workflow run publish-from-manifest.yml --repo ZeroAlloc-Net/ZeroAlloc.Flux
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore ZeroAlloc.Flux.slnx
+
+      - name: Build
+        run: dotnet build ZeroAlloc.Flux.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ZeroAlloc.Flux.slnx --configuration Release --no-build
+
+      - name: Pack every src/* csproj at its per-component manifest version
+        run: |
+          mkdir -p ./nupkg
+          # For each src/*/*.csproj, resolve its version from the manifest by
+          # finding the longest manifest key that is a prefix of the project's
+          # directory. Falls back to the root "." key when no sub-component
+          # matches. --skip-duplicate at push time makes the workflow idempotent.
+          for csproj in src/*/*.csproj; do
+            proj_dir=$(dirname "$csproj")
+            best_match="."
+            for key in $(jq -r 'keys[]' .release-please-manifest.json); do
+              if [ "$key" = "." ]; then
+                continue
+              fi
+              # Match if proj_dir starts with key followed by / or end of string
+              case "$proj_dir" in
+                "$key"|"$key"/*)
+                  if [ "${#key}" -gt "${#best_match}" ] || [ "$best_match" = "." ]; then
+                    best_match="$key"
+                  fi
+                  ;;
+              esac
+            done
+            version=$(jq -r --arg k "$best_match" '.[$k]' .release-please-manifest.json)
+            echo "Packing $csproj at version $version (manifest key: '$best_match')"
+            dotnet pack "$csproj" -c Release --no-build \
+              -p:PackageVersion="$version" -o ./nupkg
+          done
+          ls -la ./nupkg
+
+      - name: Push to NuGet
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --skip-duplicate
