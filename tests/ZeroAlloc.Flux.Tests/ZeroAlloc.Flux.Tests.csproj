@@ -18,7 +18,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="ZeroAlloc.TestHelpers" Version="1.*">
+    <PackageReference Include="ZeroAlloc.TestHelpers" Version="1.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>contentfiles;build</IncludeAssets>
     </PackageReference>
