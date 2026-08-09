@@ -53,22 +53,35 @@ internal static class TestHarness
     }
 
     /// <summary>
-    /// Builds the standard reference set: every loaded assembly in the current AppDomain
-    /// with a non-empty <c>Location</c>. Force-loads <c>ZeroAlloc.Flux</c> first so the
-    /// <c>[Feature]</c> / <c>[Reducer]</c> attribute symbols are bindable from fixture sources.
+    /// Builds the standard reference set: the framework reference assemblies for this target,
+    /// plus the <c>ZeroAlloc.Flux</c> runtime so the <c>[Feature]</c> / <c>[Reducer]</c>
+    /// attribute symbols are bindable from fixture sources.
     /// </summary>
+    /// <remarks>
+    /// This deliberately does NOT enumerate <c>AppDomain.CurrentDomain.GetAssemblies()</c>. Doing
+    /// so made the fixture compilations depend on whatever the test host happened to have loaded,
+    /// which is not a property of the code under test: moving from Microsoft.NET.Test.Sdk 17 to 18
+    /// changed that set and made <c>ZFLUX004</c> fire on a factory that is valid, failing
+    /// <c>NoDiagnostic_OnValidFactory</c> and <c>CapturesInitialStateNamedArgument</c> without a
+    /// line of generator or fixture code changing.
+    /// <para>
+    /// <c>Basic.Reference.Assemblies</c> ships the reference assemblies in the package, so the
+    /// reference set is now fixed by the target framework rather than discovered at run time —
+    /// the same approach the other generator suites in this org already use.
+    /// </para>
+    /// </remarks>
     public static List<MetadataReference> GetStandardReferences()
     {
-        // Touch a known type from the Flux runtime assembly to force CLR load.
-        _ = typeof(ZeroAlloc.Flux.FeatureAttribute).FullName;
+#if NET10_0_OR_GREATER
+        var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net100.References.All);
+#else
+        var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net80.References.All);
+#endif
 
-        var references = new List<MetadataReference>();
-        foreach (var asm in System.AppDomain.CurrentDomain.GetAssemblies())
-        {
-            if (asm.IsDynamic) continue;
-            if (string.IsNullOrEmpty(asm.Location)) continue;
-            references.Add(MetadataReference.CreateFromFile(asm.Location));
-        }
+        // The fixtures bind [Feature] / [Reducer], so the runtime assembly has to be present.
+        references.Add(
+            MetadataReference.CreateFromFile(typeof(ZeroAlloc.Flux.FeatureAttribute).Assembly.Location));
+
         return references;
     }
 }
