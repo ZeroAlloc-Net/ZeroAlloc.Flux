@@ -7,7 +7,7 @@ using Xunit;
 
 namespace ZeroAlloc.Flux.Blazor.Tests;
 
-public sealed class FluxComponentTests : Bunit.TestContext
+public sealed class FluxComponentTests : Bunit.BunitContext
 {
     [Fact]
     public async Task Component_RerendersAfterDispatch()
@@ -16,7 +16,7 @@ public sealed class FluxComponentTests : Bunit.TestContext
         Services.AddZeroAllocFlux();
         Services.AddZeroAllocFluxBlazor();
 
-        var component = RenderComponent<TestCounter>();
+        var component = Render<TestCounter>();
         Assert.Contains("Count: 0", component.Markup, System.StringComparison.Ordinal);
 
         var dispatcher = Services.GetRequiredService<IDispatcher>();
@@ -33,7 +33,7 @@ public sealed class FluxComponentTests : Bunit.TestContext
         Services.AddZeroAllocFlux();
         Services.AddZeroAllocFluxBlazor();
 
-        var component = RenderComponent<TestCounter>();
+        var component = Render<TestCounter>();
         var dispatcher = Services.GetRequiredService<IDispatcher>();
         var store = Services.GetRequiredService<IStore<TestCounterState>>();
 
