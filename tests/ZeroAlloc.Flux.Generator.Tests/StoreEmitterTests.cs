@@ -68,7 +68,7 @@ public sealed class StoreEmitterTests
             references,
             new Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions(Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary));
         var (features, _) = FeatureDiscovery.DiscoverFromCompilation(compilation);
-        var feature = features.First();
+        var feature = features[0];
         var emitted = StoreEmitter.Emit(feature);
         return Verifier.Verify(emitted, extension: "txt").UseDirectory("Snapshots");
     }
