@@ -33,7 +33,7 @@ public sealed class NoNoiseTests
 
         var diags = TestHarness.RunDiagnostics(source);
 
-        var zfluxDiags = diags.Where(d => d.Id.StartsWith("ZFLUX")).ToList();
+        var zfluxDiags = diags.AsEnumerable().Where(d => d.Id.StartsWith("ZFLUX", StringComparison.Ordinal)).ToList();
         Assert.Empty(zfluxDiags);
     }
 }

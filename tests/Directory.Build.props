@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove($(MSBuildThisFile), $(MSBuildThisFileDirectory)..))" />
+  <PropertyGroup>
+    <!-- HLQ005 says "avoid Single, use First". It is matching on the name: these calls are
+         xunit's Assert.Single, which asserts that a collection has exactly one element.
+         Rewriting them to First would delete the assertion the test exists for. Scoped to
+         tests/ so any real LINQ Single in src/ is still reported. -->
+    <NoWarn>$(NoWarn);HLQ005</NoWarn>
+  </PropertyGroup>
+</Project>

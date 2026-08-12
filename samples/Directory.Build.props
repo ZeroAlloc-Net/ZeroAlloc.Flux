@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove($(MSBuildThisFile), $(MSBuildThisFileDirectory)..))" />
+  <PropertyGroup>
+    <!-- MA0048 wants one type per file named after it. These samples put the state, the
+         actions and the entry point in a single Program.cs on purpose: the whole point of
+         the sample is that a reader sees the complete Flux setup at once. Scoped to
+         samples/ so src/ still gets the rule. -->
+    <NoWarn>$(NoWarn);MA0048</NoWarn>
+  </PropertyGroup>
+</Project>

@@ -12,9 +12,9 @@ var counter = sp.GetRequiredService<IStore<CounterState>>();
 
 counter.StateChanged += state => Console.WriteLine($"Counter changed to {state.Count}");
 
-await dispatcher.DispatchAsync(new IncrementAction(5));
-await dispatcher.DispatchAsync(new IncrementAction(3));
-await dispatcher.DispatchAsync(new ResetAction());
+await dispatcher.DispatchAsync(new IncrementAction(5)).ConfigureAwait(false);
+await dispatcher.DispatchAsync(new IncrementAction(3)).ConfigureAwait(false);
+await dispatcher.DispatchAsync(new ResetAction()).ConfigureAwait(false);
 
 Console.WriteLine($"Final: {counter.Value.Count}");
 
