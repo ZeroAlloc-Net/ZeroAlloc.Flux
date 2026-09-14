@@ -12,10 +12,15 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    # This manifest has two components — the root (ZeroAlloc.Flux + its bundled generator)
+    # and src/ZeroAlloc.Flux.Blazor, versioned independently. In multi-component mode the
+    # action does not populate the singular release_created / version / tag_name outputs;
+    # those exist only for a single-package manifest. Gating the publish job on them meant
+    # it never ran, so v1.1.0 and v1.1.1 were both tagged and changelogged without ever
+    # reaching NuGet. Use releases_created + paths_released, matching Specification and Saga.
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-      version: ${{ steps.release.outputs.version }}
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      paths_released: ${{ steps.release.outputs.paths_released }}
     steps:
       - name: Release Please
         uses: googleapis/release-please-action@v5
@@ -32,31 +37,75 @@ jobs:
 
   publish:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
       - name: Build
-        run: dotnet build -c Release -p:Version=${{ needs.release-please.outputs.version }}
+        run: dotnet build -c Release
 
       - name: Test
         run: dotnet test -c Release --no-build
 
-      - name: Pack
+      - name: Pack each released component at its manifest version
+        env:
+          PATHS_RELEASED: ${{ needs.release-please.outputs.paths_released }}
         run: |
-          dotnet pack src/ZeroAlloc.Flux/ZeroAlloc.Flux.csproj -c Release --no-build -p:PackageVersion=${{ needs.release-please.outputs.version }} -o ./nupkg
-          dotnet pack src/ZeroAlloc.Flux.Generator/ZeroAlloc.Flux.Generator.csproj -c Release --no-build -p:PackageVersion=${{ needs.release-please.outputs.version }} -o ./nupkg
-          dotnet pack src/ZeroAlloc.Flux.Blazor/ZeroAlloc.Flux.Blazor.csproj -c Release --no-build -p:PackageVersion=${{ needs.release-please.outputs.version }} -o ./nupkg
+          set -euo pipefail
+          mkdir -p ./nupkg
+
+          # paths_released is a JSON array of the components bumped in this run, and the
+          # post-merge manifest holds the new version for each. Packing only what was
+          # released keeps Blazor's independent version from being dragged along by a
+          # root-only release, and vice versa.
+          for path in $(echo "$PATHS_RELEASED" | jq -r '.[]'); do
+            version=$(jq -r --arg p "$path" '.[$p]' .release-please-manifest.json)
+
+            case "$path" in
+              # The root component covers the runtime package and the generator that ships
+              # with it; they are released as one version, so neither sits in its own
+              # component directory.
+              ".")
+                projects="src/ZeroAlloc.Flux/ZeroAlloc.Flux.csproj src/ZeroAlloc.Flux.Generator/ZeroAlloc.Flux.Generator.csproj"
+                ;;
+              *)
+                projects=$(ls "$path"/*.csproj)
+                ;;
+            esac
+
+            for csproj in $projects; do
+              echo "Packing $csproj at $version (from manifest, path $path)"
+              dotnet pack "$csproj" -c Release --no-build \
+                -p:PackageVersion="$version" -p:Version="$version" -o ./nupkg
+            done
+          done
+
+          ls -la ./nupkg
 
       - name: Push to NuGet
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Upload to GitHub Release
-        run: gh release upload ${{ needs.release-please.outputs.tag_name }} ./nupkg/*.nupkg
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PATHS_RELEASED: ${{ needs.release-please.outputs.paths_released }}
+        run: |
+          set -euo pipefail
+          # Tag names follow release-please-config.json: the root component omits its
+          # component prefix, Blazor includes it.
+          for path in $(echo "$PATHS_RELEASED" | jq -r '.[]'); do
+            version=$(jq -r --arg p "$path" '.[$p]' .release-please-manifest.json)
+            case "$path" in
+              ".") tag="v$version" ;;
+              *)   tag="blazor-v$version" ;;
+            esac
+            echo "Uploading packages to $tag"
+            gh release upload "$tag" ./nupkg/*.nupkg --clobber
+          done
