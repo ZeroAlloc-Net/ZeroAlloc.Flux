@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.2...v1.1.3) (2026-09-20)
+
+
+### Bug Fixes
+
+* correct the rescue workflow comment after the component collapse ([#111](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/111)) ([d98fb1e](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/d98fb1e62a89fa00f554e48674d7e76c63c384eb))
+
 ## [1.1.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.1...v1.1.2) (2026-09-20)
 
 
