@@ -3,7 +3,8 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.Flux.Generator.Tests;
 
@@ -28,10 +29,10 @@ internal static class TestHarness
     /// Compiles <paramref name="source"/>, runs the generator, and snapshots the resulting
     /// driver with VerifyXunit (per-test <c>.verified.cs</c> files under <c>Snapshots/</c>).
     /// </summary>
-    public static Task Verify(string source)
+    public static void Verify(string source)
     {
         var driver = Run(source, out _);
-        return Verifier.Verify(driver).UseDirectory("Snapshots");
+        GeneratorSnapshot.Verify(driver);
     }
 
     /// <summary>

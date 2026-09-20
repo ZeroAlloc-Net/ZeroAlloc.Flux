@@ -1,8 +1,9 @@
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using Xunit;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.Flux.Generator.Tests;
 
@@ -14,7 +15,7 @@ namespace ZeroAlloc.Flux.Generator.Tests;
 public sealed class DispatcherEmitterTests
 {
     [Fact]
-    public Task SingleFeature_OneAction_SnapshotMatches()
+    public void SingleFeature_OneAction_SnapshotMatches()
     {
         const string source = """
             using ZeroAlloc.Flux;
@@ -32,11 +33,11 @@ public sealed class DispatcherEmitterTests
             }
             """;
 
-        return VerifyEmit(source);
+        VerifyEmit(source);
     }
 
     [Fact]
-    public Task MultipleFeatures_FanOut_SameAction_SnapshotMatches()
+    public void MultipleFeatures_FanOut_SameAction_SnapshotMatches()
     {
         const string source = """
             using ZeroAlloc.Flux;
@@ -63,11 +64,11 @@ public sealed class DispatcherEmitterTests
             }
             """;
 
-        return VerifyEmit(source);
+        VerifyEmit(source);
     }
 
     [Fact]
-    public Task MultipleActions_SnapshotMatches()
+    public void MultipleActions_SnapshotMatches()
     {
         const string source = """
             using ZeroAlloc.Flux;
@@ -89,10 +90,10 @@ public sealed class DispatcherEmitterTests
             }
             """;
 
-        return VerifyEmit(source);
+        VerifyEmit(source);
     }
 
-    private static Task VerifyEmit(string source)
+    private static void VerifyEmit(string source)
     {
         var references = TestHarness.GetStandardReferences();
         var compilation = CSharpCompilation.Create(
@@ -103,6 +104,6 @@ public sealed class DispatcherEmitterTests
         var (features, _) = FeatureDiscovery.DiscoverFromCompilation(compilation);
         var (reducers, _) = ReducerDiscovery.DiscoverFromCompilation(compilation, features);
         var emitted = DispatcherEmitter.Emit(features, reducers);
-        return Verifier.Verify(emitted, extension: "txt").UseDirectory("Snapshots");
+        GeneratorSnapshot.VerifyText(emitted, "txt");
     }
 }
