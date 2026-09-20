@@ -17,10 +17,10 @@ jobs:
     # action does not populate the singular release_created / version / tag_name outputs;
     # those exist only for a single-package manifest. Gating the publish job on them meant
     # it never ran, so v1.1.0 and v1.1.1 were both tagged and changelogged without ever
-    # reaching NuGet. Use releases_created + paths_released, matching Specification and Saga.
+    # reaching NuGet. Use releases_created plus the singular version output.
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
-      paths_released: ${{ steps.release.outputs.paths_released }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - name: Release Please
         uses: googleapis/release-please-action@v5
@@ -49,42 +49,33 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Build
-        run: dotnet build -c Release
+        run: dotnet build -c Release -p:Version=${{ needs.release-please.outputs.version }}
 
       - name: Test
         run: dotnet test -c Release --no-build
 
-      - name: Pack each released component at its manifest version
+      - name: Pack all packages at the release version
         env:
-          PATHS_RELEASED: ${{ needs.release-please.outputs.paths_released }}
+          VERSION: ${{ needs.release-please.outputs.version }}
         run: |
           set -euo pipefail
+          if [ -z "$VERSION" ]; then
+            echo "::error::release-please reported a release but produced no version"
+            exit 1
+          fi
           mkdir -p ./nupkg
 
-          # paths_released is a JSON array of the components bumped in this run, and the
-          # post-merge manifest holds the new version for each. Packing only what was
-          # released keeps Blazor's independent version from being dragged along by a
-          # root-only release, and vice versa.
-          for path in $(echo "$PATHS_RELEASED" | jq -r '.[]'); do
-            version=$(jq -r --arg p "$path" '.[$p]' .release-please-manifest.json)
-
-            case "$path" in
-              # The root component covers the runtime package and the generator that ships
-              # with it; they are released as one version, so neither sits in its own
-              # component directory.
-              ".")
-                projects="src/ZeroAlloc.Flux/ZeroAlloc.Flux.csproj src/ZeroAlloc.Flux.Generator/ZeroAlloc.Flux.Generator.csproj"
-                ;;
-              *)
-                projects=$(ls "$path"/*.csproj)
-                ;;
-            esac
-
-            for csproj in $projects; do
-              echo "Packing $csproj at $version (from manifest, path $path)"
-              dotnet pack "$csproj" -c Release --no-build \
-                -p:PackageVersion="$version" -p:Version="$version" -o ./nupkg
-            done
+          # Every package ships at the same version, so the assembly stamped by the build
+          # step above is already correct and pack only has to label the package. Projects
+          # opt out with IsPackable false -- ZeroAlloc.Flux.Generator does, because it is
+          # bundled into ZeroAlloc.Flux as analyzers/dotnet/cs rather than published.
+          for csproj in src/*/*.csproj; do
+            if grep -q "<IsPackable>false</IsPackable>" "$csproj"; then
+              echo "Skipping $csproj (not packable)"
+              continue
+            fi
+            echo "Packing $csproj at $VERSION"
+            dotnet pack "$csproj" -c Release --no-build -p:PackageVersion="$VERSION" -o ./nupkg
           done
 
           ls -la ./nupkg
@@ -95,17 +86,10 @@ jobs:
       - name: Upload to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PATHS_RELEASED: ${{ needs.release-please.outputs.paths_released }}
+          VERSION: ${{ needs.release-please.outputs.version }}
         run: |
           set -euo pipefail
-          # Tag names follow release-please-config.json: the root component omits its
-          # component prefix, Blazor includes it.
-          for path in $(echo "$PATHS_RELEASED" | jq -r '.[]'); do
-            version=$(jq -r --arg p "$path" '.[$p]' .release-please-manifest.json)
-            case "$path" in
-              ".") tag="v$version" ;;
-              *)   tag="blazor-v$version" ;;
-            esac
-            echo "Uploading packages to $tag"
-            gh release upload "$tag" ./nupkg/*.nupkg --clobber
-          done
+          # One component, and release-please-config.json leaves the component out of the
+          # tag, so the tag is simply v<version>.
+          echo "Uploading packages to v$VERSION"
+          gh release upload "v$VERSION" ./nupkg/*.nupkg --clobber
