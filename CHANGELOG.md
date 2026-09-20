@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.1...v1.1.2) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** gate publish on the multi-component release outputs ([#95](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/95)) ([3060720](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/3060720cf46984eebc3d4b63fe0c4d04d3dfc1ef))
+* **ci:** stamp the assembly version when publishing from a manifest ([#104](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/104)) ([9155125](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/9155125ccff81b128abb06b07b4d5bc517662e15))
+* point the release manifest at the last version that shipped ([#109](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/109)) ([947a230](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/947a230ca2d5bf748f24d25fe888cfc410509346))
+* release every package at one version ([#108](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/108)) ([da1d557](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/da1d5577c1778d720ce36a4ad441d711007af8b7))
+* turn warnings into errors, fixing the six findings that were real ([#29](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/29)) ([36de449](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/36de449ed6817b421a5ffbfdc72afdf87f2636be))
+
 ## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.1...v1.2.0) (2026-09-14)
 
 
