@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.3...v1.1.4) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** pin the SDK floor at the .NET 10 GA band, not the newest patch ([#113](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/113)) ([b70ae90](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/b70ae90dbbb22374d0b23490197bd79f007697ee))
+
 ## [1.1.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.2...v1.1.3) (2026-09-20)
 
 
