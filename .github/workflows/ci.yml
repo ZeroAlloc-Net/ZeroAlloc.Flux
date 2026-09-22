@@ -83,6 +83,3 @@ jobs:
 
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
-    with:
-      package-id: ZeroAlloc.Flux
-      csproj-path: src/ZeroAlloc.Flux/ZeroAlloc.Flux.csproj
