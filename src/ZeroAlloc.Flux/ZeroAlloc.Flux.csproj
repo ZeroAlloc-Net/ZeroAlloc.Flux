@@ -23,10 +23,24 @@
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\ZeroAlloc.Flux.Generator\bin\$(Configuration)\netstandard2.0\ZeroAlloc.Flux.Generator.dll"
-          Pack="true"
-          PackagePath="analyzers/dotnet/cs"
-          Visible="false" />
-  </ItemGroup>
+  <!--
+    Bundle the generator DLL the build actually produced. Asking the generator project for its
+    target path, instead of hardcoding bin\$(Configuration)\netstandard2.0, follows any output
+    redirection such as artifacts-path. The hardcoded path silently bundled whatever stale DLL
+    sat in the repository's bin folder, at whatever version that DLL had been built with.
+    See ZeroAlloc-Net/.github#43.
+  -->
+  <Target Name="IncludeGeneratorInPackage" BeforeTargets="_GetPackageFiles">
+    <MSBuild Projects="..\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj"
+             Targets="GetTargetPath"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained">
+      <Output TaskParameter="TargetOutputs" ItemName="_ZeroAllocFluxGeneratorAssembly" />
+    </MSBuild>
+    <ItemGroup>
+      <None Include="@(_ZeroAllocFluxGeneratorAssembly)"
+            Pack="true"
+            PackagePath="analyzers/dotnet/cs"
+            Visible="false" />
+    </ItemGroup>
+  </Target>
 </Project>
