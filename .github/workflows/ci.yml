@@ -52,6 +52,9 @@ jobs:
 
   aot-smoke:
     runs-on: ubuntu-latest
+    # A hung smoke must fail fast instead of burning the 6-hour default.
+    # Typical duration is about one minute; 15 is the floor.
+    timeout-minutes: 15
     # Publishes samples/ZeroAlloc.Flux.AotSmoke with PublishAot=true and runs
     # the binary. Exercises the dispatch shape the generator emits — DispatchAsync
     # for every discovered [Reducer] target.
@@ -79,7 +82,8 @@ jobs:
         run: dotnet publish samples/ZeroAlloc.Flux.AotSmoke/ZeroAlloc.Flux.AotSmoke.csproj -r linux-x64 -c Release -o ./aot-out
 
       - name: Run AOT binary
-        run: ./aot-out/ZeroAlloc.Flux.AotSmoke
+        # Bounded so a hang fails with exit 124, see dotnet/runtime#134799.
+        run: timeout --kill-after=10s 120s ./aot-out/ZeroAlloc.Flux.AotSmoke
 
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
