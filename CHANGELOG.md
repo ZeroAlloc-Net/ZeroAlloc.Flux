@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.4...v1.1.5) (2026-09-28)
+
+
+### Bug Fixes
+
+* mark released analyzer rules and public api as shipped and automate the move ([#128](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/128)) ([6520b86](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/6520b86c1e60324343b5f1fa7676e72ec3b30efe))
+* report ZFLUX001, ZFLUX002 and ZFLUX004 at the parameter, reducer or argument they are about ([0cddbf9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/0cddbf97ae35678701f99965ec2face7e77d3b6d))
+* report ZFLUX003 for a reducer with fewer than two parameters instead of skipping it ([0cddbf9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/0cddbf97ae35678701f99965ec2face7e77d3b6d))
+
+
+### Tests
+
+* cover value types in the AOT smoke ([#130](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/130)) ([342bcc4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/342bcc42144ce478ad24b2ecdfdbd060560298ba))
+
 ## [1.1.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.3...v1.1.4) (2026-09-20)
 
 
