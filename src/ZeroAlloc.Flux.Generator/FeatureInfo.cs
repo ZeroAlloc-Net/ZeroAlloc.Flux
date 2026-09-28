@@ -21,9 +21,15 @@ namespace ZeroAlloc.Flux.Generator;
 /// The value of <c>[Feature(InitialState = "Name")]</c>, or <see langword="null"/> when
 /// the named-arg isn't supplied. Validated by <see cref="InitialStateValidator"/>.
 /// </param>
+/// <param name="InitialStateLocation">
+/// The <c>InitialState = "Name"</c> argument in the attribute, where <c>ZFLUX004</c> is reported
+/// when no factory of that name exists. <see langword="null"/> when there is no such argument in
+/// source.
+/// </param>
 internal sealed record FeatureInfo(
     INamedTypeSymbol TypeSymbol,
     string FullyQualifiedName,
     bool IsStruct,
     bool IsPartial,
-    string? InitialStateFactoryName);
+    string? InitialStateFactoryName,
+    Location? InitialStateLocation);
