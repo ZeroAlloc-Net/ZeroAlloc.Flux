@@ -67,15 +67,12 @@ internal static class FeatureDiscovery
             {
                 diagnostics.Add(Diagnostic.Create(
                     Diagnostics.ZFLUX005_FeatureNotPartial,
-                    info.TypeSymbol.Locations.Length > 0 ? info.TypeSymbol.Locations[0] : Location.None,
+                    SourceLocations.Of(info.TypeSymbol),
                     info.FullyQualifiedName));
             }
 
-            if (info.InitialStateFactoryName is not null)
-            {
-                var diag = InitialStateValidator.Validate(info.TypeSymbol, info.InitialStateFactoryName, compilation);
-                if (diag is not null) diagnostics.Add(diag);
-            }
+            var diag = InitialStateValidator.Validate(info, compilation);
+            if (diag is not null) diagnostics.Add(diag);
         }
 
         return (features.ToImmutable(), diagnostics.ToImmutable());
@@ -136,6 +133,7 @@ internal static class FeatureDiscovery
     private static FeatureInfo BuildFeatureInfo(INamedTypeSymbol type, ImmutableArray<AttributeData> featureAttributes)
     {
         string? initialState = null;
+        Location? initialStateLocation = null;
         foreach (var attr in featureAttributes)
         {
             foreach (var kvp in attr.NamedArguments)
@@ -145,6 +143,7 @@ internal static class FeatureDiscovery
                     && !string.IsNullOrEmpty(s))
                 {
                     initialState = s;
+                    initialStateLocation = NamedArgumentLocation(attr, "InitialState");
                     break;
                 }
             }
@@ -155,7 +154,27 @@ internal static class FeatureDiscovery
         var isStruct = type.TypeKind == TypeKind.Struct;
         var isPartial = IsDeclaredPartial(type);
 
-        return new FeatureInfo(type, fqn, isStruct, isPartial, initialState);
+        return new FeatureInfo(type, fqn, isStruct, isPartial, initialState, initialStateLocation);
+    }
+
+    private static Location? NamedArgumentLocation(AttributeData attribute, string name)
+    {
+        if (attribute.ApplicationSyntaxReference?.GetSyntax() is not AttributeSyntax syntax
+            || syntax.ArgumentList is null)
+        {
+            return null;
+        }
+
+        foreach (var argument in syntax.ArgumentList.Arguments)
+        {
+            if (argument.NameEquals is { } nameEquals
+                && string.Equals(nameEquals.Name.Identifier.ValueText, name, System.StringComparison.Ordinal))
+            {
+                return argument.GetLocation();
+            }
+        }
+
+        return null;
     }
 
     private static bool IsDeclaredPartial(INamedTypeSymbol type)

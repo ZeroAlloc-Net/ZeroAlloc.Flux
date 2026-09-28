@@ -53,6 +53,30 @@ internal static class TestHarness
         return CSharpGeneratorDriver.Create(generator).RunGenerators(compilation);
     }
 
+    /// <summary>The file path given to the source tree by <see cref="RunOnFile"/>.</summary>
+    public const string TestFilePath = "/src/App.cs";
+
+    /// <summary>
+    /// Runs the generator on a source tree that has the file path <see cref="TestFilePath"/>, so a
+    /// test can assert the file of a diagnostic's location. The returned diagnostics went through
+    /// the compilation's filter, so one inside <c>#pragma warning disable</c> has
+    /// <see cref="Diagnostic.IsSuppressed"/> set.
+    /// </summary>
+    public static ImmutableArray<Diagnostic> RunOnFile(string source)
+    {
+        var compilation = CreateCompilation(new[] { CSharpSyntaxTree.ParseText(source, path: TestFilePath) });
+        CSharpGeneratorDriver.Create(new FluxGenerator().AsSourceGenerator())
+            .RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics);
+        return diagnostics;
+    }
+
+    public static CSharpCompilation CreateCompilation(IEnumerable<SyntaxTree> trees) =>
+        CSharpCompilation.Create(
+            "TestAssembly",
+            trees,
+            GetStandardReferences(),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
     /// <summary>
     /// Builds the standard reference set: the framework reference assemblies for this target,
     /// plus the <c>ZeroAlloc.Flux</c> runtime so the <c>[Feature]</c> / <c>[Reducer]</c>

@@ -27,25 +27,28 @@ internal static class ReducerDiscovery
     /// cannot run here).
     /// </summary>
     /// <remarks>
-    /// Returns <see langword="null"/> when the method has fewer than 2 parameters or its
-    /// state-parameter / return type isn't a named type — these are structural prerequisites
-    /// for any meaningful downstream check.
+    /// The candidate has no <see cref="ReducerInfo"/> when the method has fewer than 2
+    /// parameters or its state or action parameter type isn't a named type. Those fail the
+    /// structural prerequisites for any downstream check, and are reported as ZFLUX003.
     /// </remarks>
-    public static ReducerInfo? Transform(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
+    public static ReducerCandidate? Transform(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         if (ctx.TargetSymbol is not IMethodSymbol method) return null;
-        if (method.Parameters.Length < 2) return null;
-        if (method.Parameters[0].Type is not INamedTypeSymbol stateType) return null;
-        if (method.Parameters[1].Type is not INamedTypeSymbol actionType) return null;
         if (method.ContainingType is null) return null;
+        if (method.Parameters.Length < 2
+            || method.Parameters[0].Type is not INamedTypeSymbol stateType
+            || method.Parameters[1].Type is not INamedTypeSymbol actionType)
+        {
+            return new ReducerCandidate(method, null);
+        }
 
-        return new ReducerInfo(
+        return new ReducerCandidate(method, new ReducerInfo(
             method,
             method.ContainingType,
             stateType,
             actionType,
             method.Name,
-            method.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            method.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
     }
 
     /// <summary>
@@ -86,7 +89,7 @@ internal static class ReducerDiscovery
             {
                 diagnostics.Add(Diagnostic.Create(
                     Diagnostics.ZFLUX003_ReducerSignatureInvalid,
-                    method.Locations.Length > 0 ? method.Locations[0] : Location.None,
+                    SourceLocations.Of(method),
                     methodDisplay));
                 continue;
             }
@@ -95,7 +98,7 @@ internal static class ReducerDiscovery
             {
                 diagnostics.Add(Diagnostic.Create(
                     Diagnostics.ZFLUX003_ReducerSignatureInvalid,
-                    method.Locations.Length > 0 ? method.Locations[0] : Location.None,
+                    SourceLocations.Of(method),
                     methodDisplay));
                 continue;
             }
@@ -104,17 +107,17 @@ internal static class ReducerDiscovery
             {
                 diagnostics.Add(Diagnostic.Create(
                     Diagnostics.ZFLUX003_ReducerSignatureInvalid,
-                    method.Locations.Length > 0 ? method.Locations[0] : Location.None,
+                    SourceLocations.Of(method),
                     methodDisplay));
                 continue;
             }
 
-            // ZFLUX001: state parameter type must be a known [Feature].
+            // ZFLUX001: state parameter type must be a known [Feature]. At the state parameter.
             if (!knownFeatureTypes.Contains(stateType))
             {
                 diagnostics.Add(Diagnostic.Create(
                     Diagnostics.ZFLUX001_ReducerOnNonFeatureState,
-                    method.Locations.Length > 0 ? method.Locations[0] : Location.None,
+                    SourceLocations.Of(method.Parameters[0]),
                     methodDisplay,
                     stateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
                 continue;
@@ -131,31 +134,49 @@ internal static class ReducerDiscovery
                 method.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
         }
 
-        // ZFLUX002: within the same OwningType, no two reducers may share (StateType, ActionType).
-        var seenPairs = new Dictionary<(INamedTypeSymbol Owning, INamedTypeSymbol State, INamedTypeSymbol Action), ReducerInfo>(
+        diagnostics.AddRange(FindDuplicates(reducers));
+
+        return (reducers.ToImmutable(), diagnostics.ToImmutable());
+    }
+
+    /// <summary>
+    /// ZFLUX002: within the same OwningType, no two reducers may share (StateType, ActionType).
+    /// Reported once per clash, at the later reducer, with the others as additional locations.
+    /// </summary>
+    public static IEnumerable<Diagnostic> FindDuplicates(IEnumerable<ReducerInfo> reducers)
+    {
+        var groups = new Dictionary<(INamedTypeSymbol Owning, INamedTypeSymbol State, INamedTypeSymbol Action), List<ReducerInfo>>(
             new TripleComparer());
-        var alreadyReported = new HashSet<(INamedTypeSymbol, INamedTypeSymbol, INamedTypeSymbol)>(new TripleComparer());
+        var order = new List<List<ReducerInfo>>();
         foreach (var r in reducers)
         {
             var key = (r.OwningType, r.StateType, r.ActionType);
-            if (seenPairs.ContainsKey(key))
+            if (!groups.TryGetValue(key, out var group))
             {
-                if (alreadyReported.Add(key))
-                {
-                    diagnostics.Add(Diagnostic.Create(
-                        Diagnostics.ZFLUX002_DuplicateReducerInFeature,
-                        r.MethodSymbol.Locations.Length > 0 ? r.MethodSymbol.Locations[0] : Location.None,
-                        r.StateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        r.ActionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
-                }
+                group = new List<ReducerInfo>();
+                groups.Add(key, group);
+                order.Add(group);
             }
-            else
-            {
-                seenPairs.Add(key, r);
-            }
+            group.Add(r);
         }
 
-        return (reducers.ToImmutable(), diagnostics.ToImmutable());
+        foreach (var group in order)
+        {
+            if (group.Count < 2) continue;
+
+            var located = new List<Location>(group.Count);
+            foreach (var r in group) located.Add(SourceLocations.Of(r.MethodSymbol));
+            located.Sort(SourceLocations.Compare);
+
+            var later = located[located.Count - 1];
+            located.RemoveAt(located.Count - 1);
+            yield return Diagnostic.Create(
+                Diagnostics.ZFLUX002_DuplicateReducerInFeature,
+                later,
+                located,
+                group[0].StateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                group[0].ActionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        }
     }
 
     private static void WalkNamespace(
