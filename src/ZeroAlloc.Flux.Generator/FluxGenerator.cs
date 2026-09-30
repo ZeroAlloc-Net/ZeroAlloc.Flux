@@ -92,9 +92,7 @@ public sealed class FluxGenerator : IIncrementalGenerator
         foreach (var feature in model.Features)
         {
             var storeSrc = StoreEmitter.Emit(feature);
-            spc.AddSource(
-                $"{StoreEmitter.GetStoreClassName(feature)}.g.cs",
-                SourceText.From(storeSrc, Encoding.UTF8));
+            spc.AddSource(feature.HintName, SourceText.From(storeSrc, Encoding.UTF8));
         }
 
         var dispatcherSrc = DispatcherEmitter.Emit(model.Features, model.Reducers);
