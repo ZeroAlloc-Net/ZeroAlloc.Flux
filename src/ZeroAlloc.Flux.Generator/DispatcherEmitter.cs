@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
-using Microsoft.CodeAnalysis;
 
 namespace ZeroAlloc.Flux.Generator;
 
@@ -56,28 +56,27 @@ internal static class DispatcherEmitter
         sb.AppendLine("    }");
 
         // Map action type FQN -> list of reducers that consume it (preserving declaration order).
-        // SymbolEqualityComparer keys collapse equivalent INamedTypeSymbol instances.
-        var byAction = new Dictionary<INamedTypeSymbol, List<ReducerInfo>>(SymbolEqualityComparer.Default);
-        var actionOrder = new List<INamedTypeSymbol>();
+        var byAction = new Dictionary<string, List<ReducerInfo>>(StringComparer.Ordinal);
+        var actionOrder = new List<string>();
         foreach (var r in reducers)
         {
-            if (!byAction.TryGetValue(r.ActionType, out var list))
+            if (!byAction.TryGetValue(r.ActionTypeFqn, out var list))
             {
                 list = new List<ReducerInfo>();
-                byAction.Add(r.ActionType, list);
-                actionOrder.Add(r.ActionType);
+                byAction.Add(r.ActionTypeFqn, list);
+                actionOrder.Add(r.ActionTypeFqn);
             }
             list.Add(r);
         }
 
-        // FeatureInfo lookup by StateType so we can resolve the matching store class name.
-        var featureByState = new Dictionary<INamedTypeSymbol, FeatureInfo>(SymbolEqualityComparer.Default);
-        foreach (var f in features) featureByState[f.TypeSymbol] = f;
+        // FeatureInfo lookup by state type FQN so we can resolve the matching store class name.
+        var featureByState = new Dictionary<string, FeatureInfo>(StringComparer.Ordinal);
+        foreach (var f in features) featureByState[f.FullyQualifiedName] = f;
 
-        foreach (var actionType in actionOrder)
+        foreach (var actionFqn in actionOrder)
         {
             sb.AppendLine();
-            EmitConcreteOverload(sb, actionType, byAction[actionType], featureByState);
+            EmitConcreteOverload(sb, actionFqn, byAction[actionFqn], featureByState);
         }
 
         // Interface entry point. Routes to the concrete overload for the supplied TAction via
@@ -87,9 +86,8 @@ internal static class DispatcherEmitter
         sb.AppendLine();
         sb.AppendLine("    public ValueTask DispatchAsync<TAction>(TAction action)");
         sb.AppendLine("    {");
-        foreach (var actionType in actionOrder)
+        foreach (var actionFqn in actionOrder)
         {
-            var actionFqn = actionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             sb.Append("        if (typeof(TAction) == typeof(").Append(actionFqn).AppendLine("))");
             sb.AppendLine("        {");
             sb.Append("            return DispatchAsync(Unsafe.As<TAction, ").Append(actionFqn).AppendLine(">(ref action));");
@@ -104,19 +102,17 @@ internal static class DispatcherEmitter
 
     private static void EmitConcreteOverload(
         StringBuilder sb,
-        INamedTypeSymbol actionType,
+        string actionFqn,
         List<ReducerInfo> reducersForAction,
-        Dictionary<INamedTypeSymbol, FeatureInfo> featureByState)
+        Dictionary<string, FeatureInfo> featureByState)
     {
-        var actionFqn = actionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
         // Filter to reducers whose state-type matches a known feature; without a matching
         // FeatureInfo we can't resolve a store class name. Discovery already raises ZFLUX001
         // for stray reducers, so silently dropping them here is safe.
         var matching = new List<(ReducerInfo Reducer, FeatureInfo Feature)>();
         foreach (var r in reducersForAction)
         {
-            if (featureByState.TryGetValue(r.StateType, out var feat))
+            if (featureByState.TryGetValue(r.StateTypeFqn, out var feat))
             {
                 matching.Add((r, feat));
             }
@@ -164,15 +160,22 @@ internal static class DispatcherEmitter
         sb.AppendLine("        return Fan(_sp, action);");
         sb.AppendLine();
         sb.Append("        static async ValueTask Fan(IServiceProvider sp, ")
-          .Append(matching[0].Reducer.ActionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+          .Append(matching[0].Reducer.ActionTypeFqn)
           .AppendLine(" action)");
         sb.AppendLine("        {");
 
+        // One local per reducer. Two can target features with the same bare name in different
+        // namespaces, or the same feature from two reducer classes, so a repeat gets a suffix.
+        var usedNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (reducer, feature) in matching)
         {
             var storeClass = StoreEmitter.GetStoreClassName(feature);
             var stateFqn = feature.FullyQualifiedName;
             var storeVar = LocalNameFor(feature);
+            for (var suffix = 2; !usedNames.Add(storeVar); suffix++)
+            {
+                storeVar = LocalNameFor(feature) + "_" + suffix.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
 
             sb.Append("            var ").Append(storeVar).Append(" = (").Append(storeClass)
               .Append(")sp.GetRequiredService<IStore<").Append(stateFqn).AppendLine(">>();");
@@ -195,15 +198,9 @@ internal static class DispatcherEmitter
     }
 
     /// <summary>
-    /// Local variable name derived from the feature's type. Doesn't need to be unique
-    /// globally — just unique within one emitted method body, which it always is because
-    /// each fan-out targets distinct feature types.
+    /// Local variable name derived from the feature's bare type name, e.g.
+    /// <c>store_CounterState</c>. It is not unique on its own: the fan-out path adds a suffix
+    /// to a repeat within one method body.
     /// </summary>
-    private static string LocalNameFor(FeatureInfo feature)
-    {
-        // Take just the unqualified type name. Strip the trailing 'State' if present to
-        // keep the local readable (CounterState -> counter), otherwise keep the bare name.
-        var name = feature.TypeSymbol.Name;
-        return "store_" + name;
-    }
+    private static string LocalNameFor(FeatureInfo feature) => "store_" + feature.Name;
 }

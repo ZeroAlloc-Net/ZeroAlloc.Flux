@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 namespace ZeroAlloc.Flux.Generator.Tests;
@@ -114,14 +112,9 @@ public sealed class InitialStateValidatorTests
         Assert.Contains(diagnostics, d => string.Equals(d.Id, "ZFLUX004", StringComparison.Ordinal));
     }
 
-    internal static (ImmutableArray<FeatureInfo>, ImmutableArray<Diagnostic>) Discover(string source)
+    private static (ImmutableArray<FeatureInfo>, ImmutableArray<Diagnostic>) Discover(string source)
     {
-        var references = TestHarness.GetStandardReferences();
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText(source) },
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-        return FeatureDiscovery.DiscoverFromCompilation(compilation);
+        var (features, _, diagnostics) = Discovery.Run(source);
+        return (features, diagnostics);
     }
 }

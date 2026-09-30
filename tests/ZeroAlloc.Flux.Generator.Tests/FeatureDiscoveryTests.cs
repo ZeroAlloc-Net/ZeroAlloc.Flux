@@ -1,6 +1,5 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 namespace ZeroAlloc.Flux.Generator.Tests;
@@ -18,7 +17,7 @@ public sealed class FeatureDiscoveryTests
             public readonly partial record struct CounterState(int Count);
             """;
 
-        var (features, diagnostics) = DiscoverFromCompilation(source);
+        var (features, diagnostics) = Discover(source);
 
         var feature = Assert.Single(features);
         Assert.Equal("global::Sample.CounterState", feature.FullyQualifiedName);
@@ -39,7 +38,7 @@ public sealed class FeatureDiscoveryTests
             public sealed partial record CounterState(int Count);
             """;
 
-        var (features, diagnostics) = DiscoverFromCompilation(source);
+        var (features, diagnostics) = Discover(source);
 
         var feature = Assert.Single(features);
         Assert.Equal("global::Sample.CounterState", feature.FullyQualifiedName);
@@ -59,7 +58,7 @@ public sealed class FeatureDiscoveryTests
             public sealed record CounterState(int Count);
             """;
 
-        var (features, diagnostics) = DiscoverFromCompilation(source);
+        var (features, diagnostics) = Discover(source);
 
         var feature = Assert.Single(features);
         Assert.False(feature.IsPartial);
@@ -82,22 +81,17 @@ public sealed class FeatureDiscoveryTests
             }
             """;
 
-        var (features, diagnostics) = DiscoverFromCompilation(source);
+        var (features, diagnostics) = Discover(source);
 
         var feature = Assert.Single(features);
         Assert.Equal("Init", feature.InitialStateFactoryName);
         Assert.Empty(diagnostics);
     }
 
-    internal static (System.Collections.Immutable.ImmutableArray<FeatureInfo>, System.Collections.Immutable.ImmutableArray<Diagnostic>)
-        DiscoverFromCompilation(string source)
+    private static (System.Collections.Immutable.ImmutableArray<FeatureInfo>, System.Collections.Immutable.ImmutableArray<Diagnostic>)
+        Discover(string source)
     {
-        var references = TestHarness.GetStandardReferences();
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText(source) },
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-        return FeatureDiscovery.DiscoverFromCompilation(compilation);
+        var (features, _, diagnostics) = Discovery.Run(source);
+        return (features, diagnostics);
     }
 }

@@ -11,19 +11,24 @@ namespace ZeroAlloc.Flux.Generator;
 internal static class InitialStateValidator
 {
     /// <summary>
-    /// Returns a <see cref="Diagnostic"/> (ZFLUX004) when the factory is missing or has the
-    /// wrong signature, or <see langword="null"/> when the contract is satisfied.
+    /// Returns ZFLUX004 when the factory is missing or has the wrong signature, or
+    /// <see langword="null"/> when the contract is satisfied or no factory is named.
     /// </summary>
     /// <remarks>
     /// A missing factory is reported at the <c>InitialState</c> argument that names it, and a
     /// factory with the wrong signature at the factory method.
     /// </remarks>
-    /// <param name="info">The <c>[Feature]</c>-decorated type and the factory name it declared.</param>
+    /// <param name="feature">The <c>[Feature]</c>-decorated type.</param>
+    /// <param name="factoryName">The factory name the attribute declared, if any.</param>
+    /// <param name="initialStateLocation">The <c>InitialState</c> argument, if in source.</param>
     /// <param name="compilation">Compilation used to resolve <see cref="System.IServiceProvider"/>.</param>
-    public static Diagnostic? Validate(FeatureInfo info, Compilation compilation)
+    public static DiagnosticInfo? Validate(
+        INamedTypeSymbol feature,
+        string? factoryName,
+        Location? initialStateLocation,
+        Compilation compilation)
     {
-        if (info.InitialStateFactoryName is not { } factoryName) return null;
-        var feature = info.TypeSymbol;
+        if (factoryName is null) return null;
         var serviceProvider = compilation.GetTypeByMetadataName("System.IServiceProvider");
         var featureFqn = feature.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
@@ -39,9 +44,9 @@ internal static class InitialStateValidator
 
         if (candidate is null)
         {
-            return Diagnostic.Create(
+            return DiagnosticInfo.Create(
                 Diagnostics.ZFLUX004_InitialStateFactoryInvalid,
-                info.InitialStateLocation ?? SourceLocations.Of(feature),
+                initialStateLocation ?? SourceLocations.Of(feature),
                 featureFqn,
                 factoryName);
         }
@@ -56,7 +61,7 @@ internal static class InitialStateValidator
 
         if (!signatureOk)
         {
-            return Diagnostic.Create(
+            return DiagnosticInfo.Create(
                 Diagnostics.ZFLUX004_InitialStateFactoryInvalid,
                 SourceLocations.Of(candidate),
                 featureFqn,

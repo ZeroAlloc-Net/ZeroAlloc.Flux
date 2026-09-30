@@ -6,10 +6,10 @@ namespace ZeroAlloc.Flux.Generator;
 /// Where the ZFLUX diagnostics are reported.
 /// </summary>
 /// <remarks>
-/// The models hold the symbols of the compilation being generated, since every step reruns on each
-/// compilation, so a symbol's own location is a source location in one of that compilation's
-/// trees. The compiler applies <c>#pragma warning disable</c> to such a location, and the IDE can
-/// navigate to it. A location rebuilt from a file path would be neither.
+/// A symbol's own location is a source location in one of the compilation's trees. The compiler
+/// applies <c>#pragma warning disable</c> to such a location, and the IDE can navigate to it. The
+/// transforms capture it as a <see cref="LocationInfo"/>, which keeps the tree, so the cached
+/// model rebuilds the same source location; a location rebuilt from a file path would be neither.
 /// </remarks>
 internal static class SourceLocations
 {
@@ -24,15 +24,5 @@ internal static class SourceLocations
         }
 
         return Location.None;
-    }
-
-    /// <summary>
-    /// Orders locations by file path, then position, so "the later declaration" is the same on
-    /// every run.
-    /// </summary>
-    public static int Compare(Location x, Location y)
-    {
-        var byPath = string.CompareOrdinal(x.SourceTree?.FilePath, y.SourceTree?.FilePath);
-        return byPath != 0 ? byPath : x.SourceSpan.Start.CompareTo(y.SourceSpan.Start);
     }
 }
