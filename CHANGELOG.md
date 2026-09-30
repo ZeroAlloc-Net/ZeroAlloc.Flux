@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.7](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.6...v1.1.7) (2026-09-30)
+
+
+### Bug Fixes
+
+* give each store local in the dispatcher fan-out a unique name so the generated code compiles ([ac1f0fe](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/ac1f0fe7c940b47c88ff0130cb1d293831625c39))
+
+
+### Performance Improvements
+
+* make the generator's pipeline models value data so unrelated edits hit the cache ([ac1f0fe](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/ac1f0fe7c940b47c88ff0130cb1d293831625c39))
+
 ## [1.1.6](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.5...v1.1.6) (2026-09-30)
 
 
