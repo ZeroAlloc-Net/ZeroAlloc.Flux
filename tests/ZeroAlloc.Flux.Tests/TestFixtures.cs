@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ZeroAlloc.Flux;
 
 // MA0048 — TestFixtures.cs intentionally holds multiple feature/action/reducer types
@@ -60,4 +61,19 @@ public static partial class TallyReducers
 {
     [Reducer]
     public static TallyState On(TallyState state, TallyAction _) => new(state.Count + 1);
+}
+
+// Struct feature wider than a pointer whose fields always agree, for the torn-read test. The
+// runtime copies a struct this size field by field, so an unguarded read can mix two states.
+[Feature]
+[StructLayout(LayoutKind.Sequential)]
+public readonly partial record struct WideState(long A, long B, long C, long D);
+
+public readonly record struct WideStepAction;
+
+public static partial class WideReducers
+{
+    [Reducer]
+    public static WideState On(WideState state, WideStepAction _)
+        => new(state.A + 1, state.B + 1, state.C + 1, state.D + 1);
 }

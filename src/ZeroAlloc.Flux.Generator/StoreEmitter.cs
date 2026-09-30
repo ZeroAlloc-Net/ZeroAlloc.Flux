@@ -6,12 +6,17 @@ namespace ZeroAlloc.Flux.Generator;
 /// Emits the per-feature <c>Store_&lt;Mangle&gt;</c> class that implements
 /// <c>IStore&lt;TFeature&gt;</c>. Two code paths:
 /// <list type="bullet">
-///   <item><b>Struct features</b> — guarded by a private <c>object _lock</c>; the reducer runs,
-///         and its result is written, under the monitor. Reads are lock-free.</item>
+///   <item><b>Struct features</b> — writers are guarded by a private <c>object _lock</c>; the
+///         reducer runs, and its result is written, under the monitor. Reads are lock-free
+///         through a sequence lock: the writer makes an <c>int _version</c> odd before it writes
+///         the state and even again after, and the reader retries until it sees the same even
+///         version on both sides of its copy. A struct wider than a pointer is copied field by
+///         field, so without this a reader racing a writer could return a torn state, see #134.</item>
 ///   <item><b>Class features</b> — CAS retry loop via <see cref="System.Threading.Interlocked"/>
 ///         on the reference field: read, reduce, and swap only if the field still holds the
 ///         instance that was read, else retry. The reducer can run more than once per dispatch,
-///         so it must be pure. No monitor needed.</item>
+///         so it must be pure. No monitor needed. Reads are a single reference load, which is
+///         atomic, so they need no sequence lock.</item>
 /// </list>
 /// The emitted class lives in the synthetic <c>ZeroAlloc.Flux.Generated</c> namespace so the
 /// mangled type name never collides with consumer code.
@@ -60,6 +65,8 @@ internal static class StoreEmitter
         if (feature.IsStruct)
         {
             sb.AppendLine("    private readonly object _lock = new();");
+            sb.AppendLine("    // Sequence lock for Value: odd while a writer is replacing _state, even otherwise.");
+            sb.AppendLine("    private int _version;");
         }
         sb.Append("    private ").Append(stateType).AppendLine(" _state;");
         sb.AppendLine();
@@ -81,7 +88,14 @@ internal static class StoreEmitter
         }
         sb.AppendLine();
 
-        sb.Append("    public ").Append(stateType).AppendLine(" Value => _state;");
+        if (feature.IsStruct)
+        {
+            EmitSequenceLockedValue(sb, stateType);
+        }
+        else
+        {
+            sb.Append("    public ").Append(stateType).AppendLine(" Value => _state;");
+        }
         sb.AppendLine();
         sb.Append("    public event Action<").Append(stateType).AppendLine(">? StateChanged;");
         sb.AppendLine();
@@ -98,7 +112,14 @@ internal static class StoreEmitter
             sb.AppendLine("        lock (_lock)");
             sb.AppendLine("        {");
             sb.AppendLine("            newState = reducer(_state, action);");
+            sb.AppendLine("            // Only writers change _version, and they hold _lock, so the plain read of it is");
+            sb.AppendLine("            // current. Interlocked.Increment is a full fence: the state stores below cannot");
+            sb.AppendLine("            // move above the odd version. Volatile.Write is a release: they cannot move below");
+            sb.AppendLine("            // the even version either. A reader therefore never sees an even version around a");
+            sb.AppendLine("            // partly written state.");
+            sb.AppendLine("            System.Threading.Interlocked.Increment(ref _version);");
             sb.AppendLine("            _state = newState;");
+            sb.AppendLine("            System.Threading.Volatile.Write(ref _version, _version + 1);");
             sb.AppendLine("        }");
         }
         else
@@ -123,5 +144,41 @@ internal static class StoreEmitter
         sb.AppendLine("}");
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Emits the lock-free, allocation-free <c>Value</c> getter of a struct store: the reader
+    /// side of the sequence lock that <c>UpdateAsync</c> writes under <c>_lock</c>.
+    /// </summary>
+    private static void EmitSequenceLockedValue(StringBuilder sb, string stateType)
+    {
+        sb.Append("    public ").Append(stateType).AppendLine(" Value");
+        sb.AppendLine("    {");
+        sb.AppendLine("        get");
+        sb.AppendLine("        {");
+        sb.AppendLine("            // A struct wider than a pointer is copied field by field, so a copy that races a");
+        sb.AppendLine("            // writer can mix two states. Retry until the same even version is seen on both");
+        sb.AppendLine("            // sides of the copy: then no writer ran during it. Ordering: the first");
+        sb.AppendLine("            // Volatile.Read is an acquire, so the state loads cannot move above it. An");
+        sb.AppendLine("            // acquire does not stop earlier loads from moving below it, so volatile reads");
+        sb.AppendLine("            // alone could let the copy slip past the second version read.");
+        sb.AppendLine("            // Interlocked.MemoryBarrier is a full fence that keeps the copy above it.");
+        sb.AppendLine("            var spinner = default(System.Threading.SpinWait);");
+        sb.AppendLine("            while (true)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                var before = System.Threading.Volatile.Read(ref _version);");
+        sb.AppendLine("                if ((before & 1) == 0)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    var state = _state;");
+        sb.AppendLine("                    System.Threading.Interlocked.MemoryBarrier();");
+        sb.AppendLine("                    if (System.Threading.Volatile.Read(ref _version) == before)");
+        sb.AppendLine("                    {");
+        sb.AppendLine("                        return state;");
+        sb.AppendLine("                    }");
+        sb.AppendLine("                }");
+        sb.AppendLine("                spinner.SpinOnce();");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
     }
 }
