@@ -18,6 +18,9 @@ namespace ZeroAlloc.Flux.Generator;
 /// The value of <c>[Feature(InitialState = "Name")]</c>, or <see langword="null"/> when
 /// the named-arg isn't supplied. Validated by <see cref="InitialStateValidator"/>.
 /// </param>
+/// <param name="HintName">
+/// The hint name of the feature's generated store file, from <see cref="HintNames.ForFeature"/>.
+/// </param>
 /// <param name="Diagnostics">ZFLUX005 and ZFLUX004 for this feature, found when it was built.</param>
 internal sealed record FeatureInfo(
     string FullyQualifiedName,
@@ -25,4 +28,5 @@ internal sealed record FeatureInfo(
     bool IsStruct,
     bool IsPartial,
     string? InitialStateFactoryName,
+    string HintName,
     EquatableArray<DiagnosticInfo> Diagnostics);

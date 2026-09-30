@@ -71,6 +71,7 @@ internal static class FeatureDiscovery
             isStruct,
             isPartial,
             initialState,
+            HintNames.ForFeature(type),
             new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutable()));
     }
 
