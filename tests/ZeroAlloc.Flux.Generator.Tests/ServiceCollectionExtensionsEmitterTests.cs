@@ -1,6 +1,3 @@
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 using ZeroAlloc.TestHelpers;
@@ -50,13 +47,7 @@ public sealed class ServiceCollectionExtensionsEmitterTests
 
     private static void VerifyEmit(string source)
     {
-        var references = TestHarness.GetStandardReferences();
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText(source) },
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-        var (features, _) = FeatureDiscovery.DiscoverFromCompilation(compilation);
+        var (features, _, _) = Discovery.Run(source);
         var emitted = ServiceCollectionExtensionsEmitter.Emit(features);
         GeneratorSnapshot.VerifyText(emitted, "txt");
     }

@@ -1,17 +1,14 @@
-using Microsoft.CodeAnalysis;
-
 namespace ZeroAlloc.Flux.Generator;
 
 /// <summary>
-/// Metadata captured for each <c>[Feature]</c>-decorated type discovered by
-/// <see cref="FeatureDiscovery"/>. Carries everything downstream emit + validation
-/// passes need without having to re-walk the symbol table.
+/// A <c>[Feature]</c>-decorated type found by <see cref="FeatureDiscovery"/>. Value data only, no
+/// symbols, so it compares equal across compilations and the pipeline can cache it.
 /// </summary>
-/// <param name="TypeSymbol">The discovered <see cref="INamedTypeSymbol"/> itself.</param>
 /// <param name="FullyQualifiedName">
 /// Fully-qualified type name including <c>global::</c> prefix, e.g.
 /// <c>global::MyNamespace.CounterState</c>.
 /// </param>
+/// <param name="Name">The bare type name, e.g. <c>CounterState</c>.</param>
 /// <param name="IsStruct"><see langword="true"/> when the feature is a record struct.</param>
 /// <param name="IsPartial">
 /// <see langword="false"/> when none of the type's syntax declarations carry the
@@ -21,15 +18,11 @@ namespace ZeroAlloc.Flux.Generator;
 /// The value of <c>[Feature(InitialState = "Name")]</c>, or <see langword="null"/> when
 /// the named-arg isn't supplied. Validated by <see cref="InitialStateValidator"/>.
 /// </param>
-/// <param name="InitialStateLocation">
-/// The <c>InitialState = "Name"</c> argument in the attribute, where <c>ZFLUX004</c> is reported
-/// when no factory of that name exists. <see langword="null"/> when there is no such argument in
-/// source.
-/// </param>
+/// <param name="Diagnostics">ZFLUX005 and ZFLUX004 for this feature, found when it was built.</param>
 internal sealed record FeatureInfo(
-    INamedTypeSymbol TypeSymbol,
     string FullyQualifiedName,
+    string Name,
     bool IsStruct,
     bool IsPartial,
     string? InitialStateFactoryName,
-    Location? InitialStateLocation);
+    EquatableArray<DiagnosticInfo> Diagnostics);

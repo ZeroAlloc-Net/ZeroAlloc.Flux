@@ -1,6 +1,3 @@
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 using ZeroAlloc.TestHelpers;
@@ -9,7 +6,7 @@ namespace ZeroAlloc.Flux.Generator.Tests;
 
 /// <summary>
 /// Snapshot tests for <see cref="StoreEmitter"/>. Each test compiles a fixture source,
-/// runs <see cref="FeatureDiscovery.DiscoverFromCompilation"/>, then verifies the emitted
+/// runs the generator pipeline through <see cref="Discovery"/>, then verifies the emitted
 /// store source against a <c>.verified.txt</c> snapshot under <c>Snapshots/</c>.
 /// </summary>
 public sealed class StoreEmitterTests
@@ -62,13 +59,7 @@ public sealed class StoreEmitterTests
 
     private static void VerifyEmit(string source)
     {
-        var references = TestHarness.GetStandardReferences();
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText(source) },
-            references,
-            new Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions(Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary));
-        var (features, _) = FeatureDiscovery.DiscoverFromCompilation(compilation);
+        var (features, _, _) = Discovery.Run(source);
         var feature = features[0];
         var emitted = StoreEmitter.Emit(feature);
         GeneratorSnapshot.VerifyText(emitted, "txt");

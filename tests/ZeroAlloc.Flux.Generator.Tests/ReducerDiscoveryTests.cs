@@ -2,7 +2,6 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 namespace ZeroAlloc.Flux.Generator.Tests;
@@ -34,7 +33,8 @@ public sealed class ReducerDiscoveryTests
         var reducer = Assert.Single(reducers);
         Assert.Equal("On", reducer.MethodName);
         Assert.Equal("global::Sample.CounterReducers", reducer.OwningTypeFqn);
-        Assert.Equal("Sample.IncrementAction", reducer.ActionType.ToDisplayString());
+        Assert.Equal("global::Sample.CounterState", reducer.StateTypeFqn);
+        Assert.Equal("global::Sample.IncrementAction", reducer.ActionTypeFqn);
         Assert.Empty(diagnostics);
     }
 
@@ -130,15 +130,9 @@ public sealed class ReducerDiscoveryTests
         Assert.Contains(diagnostics, d => string.Equals(d.Id, "ZFLUX002", StringComparison.Ordinal));
     }
 
-    internal static (ImmutableArray<ReducerInfo>, ImmutableArray<Diagnostic>) Discover(string source)
+    private static (ImmutableArray<ReducerInfo>, ImmutableArray<Diagnostic>) Discover(string source)
     {
-        var references = TestHarness.GetStandardReferences();
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText(source) },
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-        var (features, _) = FeatureDiscovery.DiscoverFromCompilation(compilation);
-        return ReducerDiscovery.DiscoverFromCompilation(compilation, features);
+        var (_, reducers, diagnostics) = Discovery.Run(source);
+        return (reducers, diagnostics);
     }
 }

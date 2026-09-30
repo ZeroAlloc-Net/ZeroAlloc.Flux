@@ -1,6 +1,3 @@
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 using ZeroAlloc.TestHelpers;
@@ -95,14 +92,7 @@ public sealed class DispatcherEmitterTests
 
     private static void VerifyEmit(string source)
     {
-        var references = TestHarness.GetStandardReferences();
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText(source) },
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-        var (features, _) = FeatureDiscovery.DiscoverFromCompilation(compilation);
-        var (reducers, _) = ReducerDiscovery.DiscoverFromCompilation(compilation, features);
+        var (features, reducers, _) = Discovery.Run(source);
         var emitted = DispatcherEmitter.Emit(features, reducers);
         GeneratorSnapshot.VerifyText(emitted, "txt");
     }
