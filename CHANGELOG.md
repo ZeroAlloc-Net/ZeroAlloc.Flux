@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.5...v1.1.6) (2026-09-30)
+
+
+### Bug Fixes
+
+* run reducers inside the store's atomic section so concurrent dispatches keep every update ([#135](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/135)) ([4044a6d](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/4044a6d1aa3087529462c5602ece7b99f178e60c))
+
 ## [1.1.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.4...v1.1.5) (2026-09-28)
 
 
