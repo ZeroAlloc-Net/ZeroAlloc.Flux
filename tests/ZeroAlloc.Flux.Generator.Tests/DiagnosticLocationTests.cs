@@ -76,6 +76,19 @@ public sealed class DiagnosticLocationTests
         [Feature]
         public readonly record struct [|CounterState|](int Count);
         """)]
+    // ZFLUX006: the generic feature type's identifier.
+    [InlineData("ZFLUX006", Prelude + """
+        [Feature]
+        public sealed partial record [|GenericState|]<T>(T Value);
+        """)]
+    // ZFLUX007: the identifier of the feature type that is not accessible.
+    [InlineData("ZFLUX007", Prelude + """
+        public partial class Outer
+        {
+            [Feature]
+            private readonly partial record struct [|HiddenState|](int Count);
+        }
+        """)]
     public void Diagnostic_IsReportedAtItsSourceLocation(string id, string markedSource)
     {
         var (source, spans) = Unmark(markedSource);

@@ -17,7 +17,7 @@ internal static class TestHarness
     /// <summary>
     /// Compiles <paramref name="source"/> into a transient <c>TestAssembly</c>, runs
     /// <see cref="FluxGenerator"/> over it, and returns only the generator-emitted
-    /// diagnostics. Use this from diagnostic-focused tests (ZFLUX001-ZFLUX005).
+    /// diagnostics. Use this from diagnostic-focused tests (ZFLUX001-ZFLUX008).
     /// </summary>
     public static ImmutableArray<Diagnostic> RunDiagnostics(string source)
     {

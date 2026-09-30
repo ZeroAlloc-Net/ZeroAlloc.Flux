@@ -18,11 +18,12 @@ namespace ZeroAlloc.Flux.Generator;
 ///         <see cref="FeatureDiscovery.Transform"/> and <see cref="ReducerDiscovery.Transform"/>.
 ///         They read the symbols and return value-equal models with no <see cref="ISymbol"/>
 ///         or <see cref="Compilation"/>, carrying the diagnostics that concern one model alone
-///         (ZFLUX003 / ZFLUX004 / ZFLUX005) as <see cref="DiagnosticInfo"/>.</item>
+///         (ZFLUX003 to ZFLUX007) as <see cref="DiagnosticInfo"/>.</item>
 ///   <item>Both branches <c>.Collect()</c> into arrays and are <c>.Combine()</c>d.</item>
 ///   <item>A single <c>RegisterSourceOutput</c> stage runs <see cref="FluxValidation"/>, which
-///         adds the cross-model checks ZFLUX001 / ZFLUX002, reports every diagnostic, and emits
-///         Store_*, FluxDispatcher, and FluxServiceCollectionExtensions sources.</item>
+///         adds the cross-model checks ZFLUX001 / ZFLUX002 / ZFLUX008, reports every diagnostic,
+///         and emits Store_*, FluxDispatcher, and FluxServiceCollectionExtensions sources for
+///         every feature a store can be generated for.</item>
 /// </list>
 /// </para>
 /// <para>

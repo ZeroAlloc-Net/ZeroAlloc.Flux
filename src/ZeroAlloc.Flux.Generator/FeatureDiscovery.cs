@@ -7,7 +7,7 @@ namespace ZeroAlloc.Flux.Generator;
 
 /// <summary>
 /// Builds a <see cref="FeatureInfo"/> for each <c>[Feature]</c>-decorated type, with the
-/// ZFLUX005 and ZFLUX004 diagnostics that concern it alone.
+/// ZFLUX004 to ZFLUX007 diagnostics that concern it alone.
 /// </summary>
 internal static class FeatureDiscovery
 {
@@ -65,6 +65,27 @@ internal static class FeatureDiscovery
             type, initialState, initialStateLocation, ctx.SemanticModel.Compilation);
         if (initialStateError is not null) diagnostics.Add(initialStateError);
 
+        // A store is generated only for a closed type that the generated code can name.
+        var canGenerate = true;
+        if (IsGenericOrInGenericType(type))
+        {
+            // ZFLUX006 — at the feature type.
+            canGenerate = false;
+            diagnostics.Add(DiagnosticInfo.Create(
+                Diagnostics.ZFLUX006_GenericFeature,
+                SourceLocations.Of(type),
+                fqn));
+        }
+        else if (!IsAccessibleToAssembly(type))
+        {
+            // ZFLUX007 — at the feature type.
+            canGenerate = false;
+            diagnostics.Add(DiagnosticInfo.Create(
+                Diagnostics.ZFLUX007_FeatureNotAccessible,
+                SourceLocations.Of(type),
+                fqn));
+        }
+
         return new FeatureInfo(
             fqn,
             type.Name,
@@ -72,7 +93,43 @@ internal static class FeatureDiscovery
             isPartial,
             initialState,
             HintNames.ForFeature(type),
+            StoreEmitter.GetStoreClassName(type),
+            canGenerate,
+            LocationInfo.From(SourceLocations.Of(type)),
             new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutable()));
+    }
+
+    /// <summary>
+    /// The generator only sees a generic feature's definition, never the type arguments it is
+    /// used with, so it has no closed type to make a store for.
+    /// </summary>
+    private static bool IsGenericOrInGenericType(INamedTypeSymbol type)
+    {
+        for (var t = type; t is not null; t = t.ContainingType)
+        {
+            if (t.Arity > 0) return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// The generated store, dispatcher and registrations live in their own namespace, so they
+    /// can name the feature only if it and every type containing it are public, internal or
+    /// protected internal, and it is not a file-local type.
+    /// </summary>
+    private static bool IsAccessibleToAssembly(INamedTypeSymbol type)
+    {
+        for (var t = type; t is not null; t = t.ContainingType)
+        {
+            if (t.IsFileLocal) return false;
+            if (t.DeclaredAccessibility is Accessibility.Private
+                or Accessibility.Protected
+                or Accessibility.ProtectedAndInternal)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static Location? NamedArgumentLocation(AttributeData attribute, string name)

@@ -15,7 +15,7 @@ public sealed class HintNameTests
     [Fact]
     public void SameNamedFeatures_InDifferentContainingTypes_Compile()
     {
-        AssertCompiles("""
+        GeneratorAssert.Compiles("""
             using ZeroAlloc.Flux;
             namespace App;
 
@@ -36,8 +36,7 @@ public sealed class HintNameTests
     /// <summary>
     /// <c>App_X.CounterState</c> and <c>App.X_CounterState</c> were both written to
     /// <c>Store_App_X_CounterState.g.cs</c>, so the generator threw and emitted nothing.
-    /// Their store classes still share a name, which is #142, so this checks the
-    /// generator's own output rather than the compilation.
+    /// <see cref="StoreClassNameTests"/> checks that the two stores also compile.
     /// </summary>
     [Fact]
     public void Features_WhoseNamesDifferOnlyInUnderscoreAndDot_GetDistinctFiles()
@@ -72,36 +71,30 @@ public sealed class HintNameTests
 
     /// <summary>
     /// The hint name was built from the store class name, which carries the feature's type
-    /// parameters, so Roslyn rejected the <c>&lt;</c> and the generator emitted nothing. The
-    /// store class itself does not compile for a generic feature, which is #142.
+    /// parameters, so Roslyn rejected the <c>&lt;</c> and the generator emitted nothing. No store
+    /// is generated for a generic feature since #142, which reports ZFLUX006 instead, so this
+    /// names the symbols directly.
     /// </summary>
     [Fact]
     public void GenericFeatures_AreNamedWithTheirArity()
     {
-        var result = RunGenerator("""
-            using ZeroAlloc.Flux;
+        var compilation = TestHarness.CreateCompilation(new[] { CSharpSyntaxTree.ParseText("""
             namespace App;
 
-            [Feature]
             public partial record GenericState<T>(T Value);
 
             public partial class Outer<T>
             {
-                [Feature]
                 public partial record Inner<U>(U Value);
             }
-            """);
+            """) });
 
-        Assert.Null(result.Exception);
         Assert.Equal(
-            new[]
-            {
-                "App.GenericState`1.Store.g.cs",
-                "App.Outer`1+Inner`1.Store.g.cs",
-                "FluxDispatcher.g.cs",
-                "FluxServiceCollectionExtensions.g.cs",
-            },
-            HintNamesOf(result));
+            "App.GenericState`1.Store.g.cs",
+            HintNames.ForFeature(compilation.GetTypeByMetadataName("App.GenericState`1")!));
+        Assert.Equal(
+            "App.Outer`1+Inner`1.Store.g.cs",
+            HintNames.ForFeature(compilation.GetTypeByMetadataName("App.Outer`1+Inner`1")!));
     }
 
     [Fact]
@@ -193,21 +186,4 @@ public sealed class HintNameTests
 
     private static string[] HintNamesOf(GeneratorRunResult result) =>
         result.GeneratedSources.Select(s => s.HintName).OrderBy(h => h, StringComparer.Ordinal).ToArray();
-
-    private static void AssertCompiles(string source)
-    {
-        var compilation = TestHarness.CreateCompilation(new[] { CSharpSyntaxTree.ParseText(source) })
-            .AddReferences(MetadataReference.CreateFromFile(
-                typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly.Location));
-
-        CSharpGeneratorDriver.Create(new FluxGenerator().AsSourceGenerator())
-            .RunGeneratorsAndUpdateCompilation(compilation, out var output, out var generatorDiagnostics);
-
-        Assert.Empty(generatorDiagnostics);
-        var errors = output.GetDiagnostics()
-            .Where(d => d.Severity == DiagnosticSeverity.Error)
-            .Select(d => d.ToString())
-            .ToList();
-        Assert.True(errors.Count == 0, string.Join(Environment.NewLine, errors));
-    }
 }
