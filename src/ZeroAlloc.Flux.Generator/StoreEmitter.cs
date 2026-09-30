@@ -6,10 +6,12 @@ namespace ZeroAlloc.Flux.Generator;
 /// Emits the per-feature <c>Store_&lt;Mangle&gt;</c> class that implements
 /// <c>IStore&lt;TFeature&gt;</c>. Two code paths:
 /// <list type="bullet">
-///   <item><b>Struct features</b> — guarded by a private <c>object _lock</c>; writes atomic
-///         under the monitor, reads lock-free.</item>
-///   <item><b>Class features</b> — CAS loop via <see cref="System.Threading.Interlocked"/>
-///         on the reference field; no monitor needed.</item>
+///   <item><b>Struct features</b> — guarded by a private <c>object _lock</c>; the reducer runs,
+///         and its result is written, under the monitor. Reads are lock-free.</item>
+///   <item><b>Class features</b> — CAS retry loop via <see cref="System.Threading.Interlocked"/>
+///         on the reference field: read, reduce, and swap only if the field still holds the
+///         instance that was read, else retry. The reducer can run more than once per dispatch,
+///         so it must be pure. No monitor needed.</item>
 /// </list>
 /// The emitted class lives in the synthetic <c>ZeroAlloc.Flux.Generated</c> namespace so the
 /// mangled type name never collides with consumer code.
@@ -84,23 +86,36 @@ internal static class StoreEmitter
         sb.Append("    public event Action<").Append(stateType).AppendLine(">? StateChanged;");
         sb.AppendLine();
 
-        sb.Append("    internal ValueTask UpdateAsync(").Append(stateType).AppendLine(" newState)");
+        // The reducer runs inside the atomic section, on the state it replaces. Computing the new
+        // state outside it and writing it afterwards loses concurrent updates, see #131.
+        sb.AppendLine("    internal ValueTask UpdateAsync<TAction>(");
+        sb.AppendLine("        TAction action,");
+        sb.Append("        Func<").Append(stateType).Append(", TAction, ").Append(stateType).AppendLine("> reducer)");
         sb.AppendLine("    {");
+        sb.Append("        ").Append(stateType).AppendLine(" newState;");
         if (feature.IsStruct)
         {
             sb.AppendLine("        lock (_lock)");
             sb.AppendLine("        {");
+            sb.AppendLine("            newState = reducer(_state, action);");
             sb.AppendLine("            _state = newState;");
             sb.AppendLine("        }");
         }
         else
         {
-            sb.Append("        ").Append(stateType).AppendLine(" oldState;");
-            sb.AppendLine("        do");
+            // ReferenceEquals, not the record's value equality: the swap succeeded only when
+            // the field still holds the very instance the reducer ran on.
+            sb.AppendLine("        while (true)");
             sb.AppendLine("        {");
-            sb.AppendLine("            oldState = _state;");
+            sb.AppendLine("            var oldState = System.Threading.Volatile.Read(ref _state);");
+            sb.AppendLine("            newState = reducer(oldState, action);");
+            sb.AppendLine("            if (object.ReferenceEquals(");
+            sb.AppendLine("                System.Threading.Interlocked.CompareExchange(ref _state, newState, oldState),");
+            sb.AppendLine("                oldState))");
+            sb.AppendLine("            {");
+            sb.AppendLine("                break;");
+            sb.AppendLine("            }");
             sb.AppendLine("        }");
-            sb.AppendLine("        while (System.Threading.Interlocked.CompareExchange(ref _state, newState, oldState) != oldState);");
         }
         sb.AppendLine("        StateChanged?.Invoke(newState);");
         sb.AppendLine("        return ValueTask.CompletedTask;");

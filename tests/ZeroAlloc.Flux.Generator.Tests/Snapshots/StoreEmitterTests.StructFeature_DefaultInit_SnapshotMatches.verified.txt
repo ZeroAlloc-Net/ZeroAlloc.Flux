@@ -20,10 +20,14 @@ internal sealed class Store_Sample_CounterState : IStore<global::Sample.CounterS
 
     public event Action<global::Sample.CounterState>? StateChanged;
 
-    internal ValueTask UpdateAsync(global::Sample.CounterState newState)
+    internal ValueTask UpdateAsync<TAction>(
+        TAction action,
+        Func<global::Sample.CounterState, TAction, global::Sample.CounterState> reducer)
     {
+        global::Sample.CounterState newState;
         lock (_lock)
         {
+            newState = reducer(_state, action);
             _state = newState;
         }
         StateChanged?.Invoke(newState);

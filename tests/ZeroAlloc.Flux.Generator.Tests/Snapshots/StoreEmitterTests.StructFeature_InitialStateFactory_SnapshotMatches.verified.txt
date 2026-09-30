@@ -20,10 +20,14 @@ internal sealed class Store_Sample_ConfiguredState : IStore<global::Sample.Confi
 
     public event Action<global::Sample.ConfiguredState>? StateChanged;
 
-    internal ValueTask UpdateAsync(global::Sample.ConfiguredState newState)
+    internal ValueTask UpdateAsync<TAction>(
+        TAction action,
+        Func<global::Sample.ConfiguredState, TAction, global::Sample.ConfiguredState> reducer)
     {
+        global::Sample.ConfiguredState newState;
         lock (_lock)
         {
+            newState = reducer(_state, action);
             _state = newState;
         }
         StateChanged?.Invoke(newState);

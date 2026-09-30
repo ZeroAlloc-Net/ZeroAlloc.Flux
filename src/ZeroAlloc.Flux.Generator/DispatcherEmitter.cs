@@ -15,8 +15,9 @@ namespace ZeroAlloc.Flux.Generator;
 /// Fan-out strategy per concrete overload:
 /// <list type="bullet">
 ///   <item><b>Single matching feature</b> — emit a straight-line return of
-///         <c>store.UpdateAsync(reducer.On(store.Value, action))</c>. Pure sync, no state
-///         machine, no allocations on the happy path.</item>
+///         <c>store.UpdateAsync(action, static (s, a) =&gt; Reducer.On(s, a))</c>. The store
+///         runs the reducer inside its atomic section. Pure sync, no state machine, no
+///         allocations on the happy path.</item>
 ///   <item><b>Multiple matching features</b> — emit an <c>async ValueTask</c> body that
 ///         awaits each store's <c>UpdateAsync</c> in declaration order. ValueTask boxes once
 ///         only if a subscriber actually suspends.</item>
@@ -151,9 +152,9 @@ internal static class DispatcherEmitter
 
         sb.Append("        var ").Append(storeVar).Append(" = (").Append(storeClass)
           .Append(")_sp.GetRequiredService<IStore<").Append(stateFqn).AppendLine(">>();");
-        sb.Append("        return ").Append(storeVar).Append(".UpdateAsync(")
-          .Append(pair.Reducer.OwningTypeFqn).Append('.').Append(pair.Reducer.MethodName)
-          .Append('(').Append(storeVar).AppendLine(".Value, action));");
+        sb.Append("        return ").Append(storeVar).Append(".UpdateAsync(action, ");
+        AppendReducerLambda(sb, pair.Reducer);
+        sb.AppendLine(");");
     }
 
     private static void EmitFanOutPath(StringBuilder sb, List<(ReducerInfo Reducer, FeatureInfo Feature)> matching)
@@ -175,14 +176,22 @@ internal static class DispatcherEmitter
 
             sb.Append("            var ").Append(storeVar).Append(" = (").Append(storeClass)
               .Append(")sp.GetRequiredService<IStore<").Append(stateFqn).AppendLine(">>();");
-            sb.Append("            var new").Append(storeVar).Append(" = ")
-              .Append(reducer.OwningTypeFqn).Append('.').Append(reducer.MethodName)
-              .Append('(').Append(storeVar).AppendLine(".Value, action);");
-            sb.Append("            await ").Append(storeVar).Append(".UpdateAsync(new").Append(storeVar)
-              .AppendLine(").ConfigureAwait(false);");
+            sb.Append("            await ").Append(storeVar).Append(".UpdateAsync(action, ");
+            AppendReducerLambda(sb, reducer);
+            sb.AppendLine(").ConfigureAwait(false);");
         }
 
         sb.AppendLine("        }");
+    }
+
+    /// <summary>
+    /// Appends the reducer as a static lambda the store runs inside its atomic section. A
+    /// non-capturing lambda is cached by the compiler, so dispatch allocates no delegate.
+    /// </summary>
+    private static void AppendReducerLambda(StringBuilder sb, ReducerInfo reducer)
+    {
+        sb.Append("static (s, a) => ")
+          .Append(reducer.OwningTypeFqn).Append('.').Append(reducer.MethodName).Append("(s, a)");
     }
 
     /// <summary>

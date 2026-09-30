@@ -19,14 +19,22 @@ internal sealed class Store_Sample_CounterState : IStore<global::Sample.CounterS
 
     public event Action<global::Sample.CounterState>? StateChanged;
 
-    internal ValueTask UpdateAsync(global::Sample.CounterState newState)
+    internal ValueTask UpdateAsync<TAction>(
+        TAction action,
+        Func<global::Sample.CounterState, TAction, global::Sample.CounterState> reducer)
     {
-        global::Sample.CounterState oldState;
-        do
+        global::Sample.CounterState newState;
+        while (true)
         {
-            oldState = _state;
+            var oldState = System.Threading.Volatile.Read(ref _state);
+            newState = reducer(oldState, action);
+            if (object.ReferenceEquals(
+                System.Threading.Interlocked.CompareExchange(ref _state, newState, oldState),
+                oldState))
+            {
+                break;
+            }
         }
-        while (System.Threading.Interlocked.CompareExchange(ref _state, newState, oldState) != oldState);
         StateChanged?.Invoke(newState);
         return ValueTask.CompletedTask;
     }
