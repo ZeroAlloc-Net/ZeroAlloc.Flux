@@ -53,7 +53,7 @@ public sealed class AllocationBudgetTests
     public void StoreValue_Getter_ZeroAllocation()
     {
         // Library promise: IStore<T>.Value is a lock-free read. With T == record struct, the
-        // returned value is copied to the caller's stack — zero heap allocation.
+        // sequence-locked read copies the value to the caller's stack — zero heap allocation.
         var services = new ServiceCollection();
         services.AddZeroAllocFlux();
         using var sp = services.BuildServiceProvider();

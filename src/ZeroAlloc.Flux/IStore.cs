@@ -9,7 +9,13 @@ namespace ZeroAlloc.Flux;
 /// <see cref="FeatureAttribute"/> in the consuming compilation.</typeparam>
 public interface IStore<TState>
 {
-    /// <summary>The current state value. Reads are lock-free.</summary>
+    /// <summary>
+    /// The current state value. Reads are lock-free, allocation-free and safe from any thread
+    /// while other threads dispatch: every read returns a state a reducer stored, never a mix of
+    /// two. For a struct feature, the generated store guards the read with a sequence lock, so
+    /// a read that races a write retries until it copies the state whole. A record-class
+    /// feature is read as a single reference, which is atomic.
+    /// </summary>
     TState Value { get; }
 
     /// <summary>

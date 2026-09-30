@@ -74,7 +74,7 @@ Matches Fluxor's basic semantics. Cross-feature fan-out covers the natural "one 
 
 The generator emits different update strategies per `[Feature]`:
 
-- **`record struct` (recommended default)** — per-store `lock(_lock)` around the state field. Zero-allocation per update. Slightly higher per-dispatch overhead than CAS on the uncontested path, but contention is negligible for typical Blazor state slices. Docs steer users here.
+- **`record struct` (recommended default)** — per-store `lock(_lock)` around the state field. Zero-allocation per update. Slightly higher per-dispatch overhead than CAS on the uncontested path, but contention is negligible for typical Blazor state slices. Docs steer users here. Reads stay lock-free through a sequence lock: the writer makes a version counter odd before it writes and even after, and `Value` retries until it copies the state between two equal even versions, so a struct wider than a pointer is never read torn (#134).
 - **`record class` (opt-in for concurrent backends)** — lock-free CAS via `Interlocked.CompareExchange<TState>(ref _state, newState, oldState)`. Allocates one record per update (user-controlled cost). Lock-free dispatch makes it suitable for high-concurrency backend stores.
 
 Both compile under PublishAot=true. The generator chooses the strategy automatically based on `INamedTypeSymbol.IsValueType`.

@@ -9,6 +9,8 @@ namespace ZeroAlloc.Flux.Generated;
 internal sealed class Store_Sample_ConfiguredState : IStore<global::Sample.ConfiguredState>
 {
     private readonly object _lock = new();
+    // Sequence lock for Value: odd while a writer is replacing _state, even otherwise.
+    private int _version;
     private global::Sample.ConfiguredState _state;
 
     public Store_Sample_ConfiguredState(System.IServiceProvider sp)
@@ -16,7 +18,34 @@ internal sealed class Store_Sample_ConfiguredState : IStore<global::Sample.Confi
         _state = global::Sample.ConfiguredState.Init(sp);
     }
 
-    public global::Sample.ConfiguredState Value => _state;
+    public global::Sample.ConfiguredState Value
+    {
+        get
+        {
+            // A struct wider than a pointer is copied field by field, so a copy that races a
+            // writer can mix two states. Retry until the same even version is seen on both
+            // sides of the copy: then no writer ran during it. Ordering: the first
+            // Volatile.Read is an acquire, so the state loads cannot move above it. An
+            // acquire does not stop earlier loads from moving below it, so volatile reads
+            // alone could let the copy slip past the second version read.
+            // Interlocked.MemoryBarrier is a full fence that keeps the copy above it.
+            var spinner = default(System.Threading.SpinWait);
+            while (true)
+            {
+                var before = System.Threading.Volatile.Read(ref _version);
+                if ((before & 1) == 0)
+                {
+                    var state = _state;
+                    System.Threading.Interlocked.MemoryBarrier();
+                    if (System.Threading.Volatile.Read(ref _version) == before)
+                    {
+                        return state;
+                    }
+                }
+                spinner.SpinOnce();
+            }
+        }
+    }
 
     public event Action<global::Sample.ConfiguredState>? StateChanged;
 
@@ -28,7 +57,14 @@ internal sealed class Store_Sample_ConfiguredState : IStore<global::Sample.Confi
         lock (_lock)
         {
             newState = reducer(_state, action);
+            // Only writers change _version, and they hold _lock, so the plain read of it is
+            // current. Interlocked.Increment is a full fence: the state stores below cannot
+            // move above the odd version. Volatile.Write is a release: they cannot move below
+            // the even version either. A reader therefore never sees an even version around a
+            // partly written state.
+            System.Threading.Interlocked.Increment(ref _version);
             _state = newState;
+            System.Threading.Volatile.Write(ref _version, _version + 1);
         }
         StateChanged?.Invoke(newState);
         return ValueTask.CompletedTask;
