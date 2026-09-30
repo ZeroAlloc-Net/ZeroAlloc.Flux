@@ -45,4 +45,28 @@ internal static class Diagnostics
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ZFLUX006_GenericFeature = new(
+        id: "ZFLUX006",
+        title: "[Feature] type must not be generic",
+        messageFormat: "Feature '{0}' is generic or nested in a generic type, so no store is generated for it; a store needs a closed state type",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ZFLUX007_FeatureNotAccessible = new(
+        id: "ZFLUX007",
+        title: "[Feature] type must be accessible to the rest of its assembly",
+        messageFormat: "Feature '{0}' is not accessible to the rest of its assembly, so no store is generated for it; make it and each type that contains it public or internal",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ZFLUX008_FeatureNamesDifferOnlyInCase = new(
+        id: "ZFLUX008",
+        title: "Two [Feature] types have qualified names that differ only in case",
+        messageFormat: "Feature '{0}' has the same qualified name as '{1}' apart from case, so no store is generated for it; rename one of them",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

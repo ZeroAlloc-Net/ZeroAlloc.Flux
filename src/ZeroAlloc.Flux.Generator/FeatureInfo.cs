@@ -21,7 +21,19 @@ namespace ZeroAlloc.Flux.Generator;
 /// <param name="HintName">
 /// The hint name of the feature's generated store file, from <see cref="HintNames.ForFeature"/>.
 /// </param>
-/// <param name="Diagnostics">ZFLUX005 and ZFLUX004 for this feature, found when it was built.</param>
+/// <param name="StoreClassName">
+/// The name of the feature's generated store class, from
+/// <see cref="StoreEmitter.GetStoreClassName"/>.
+/// </param>
+/// <param name="CanGenerate">
+/// <see langword="false"/> when no store can be generated for the feature: it is generic or nested
+/// in a generic type, <c>ZFLUX006</c>, or not accessible to the rest of its assembly,
+/// <c>ZFLUX007</c>.
+/// </param>
+/// <param name="Location">The feature's identifier, where <c>ZFLUX008</c> is reported.</param>
+/// <param name="Diagnostics">
+/// ZFLUX004 to ZFLUX007 for this feature, found when it was built.
+/// </param>
 internal sealed record FeatureInfo(
     string FullyQualifiedName,
     string Name,
@@ -29,4 +41,7 @@ internal sealed record FeatureInfo(
     bool IsPartial,
     string? InitialStateFactoryName,
     string HintName,
+    string StoreClassName,
+    bool CanGenerate,
+    LocationInfo? Location,
     EquatableArray<DiagnosticInfo> Diagnostics);

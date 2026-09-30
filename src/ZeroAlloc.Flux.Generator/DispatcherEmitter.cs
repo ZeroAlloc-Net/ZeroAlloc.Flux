@@ -142,7 +142,7 @@ internal static class DispatcherEmitter
 
     private static void EmitSinglePath(StringBuilder sb, (ReducerInfo Reducer, FeatureInfo Feature) pair)
     {
-        var storeClass = StoreEmitter.GetStoreClassName(pair.Feature);
+        var storeClass = pair.Feature.StoreClassName;
         var stateFqn = pair.Feature.FullyQualifiedName;
         var storeVar = LocalNameFor(pair.Feature);
 
@@ -169,7 +169,7 @@ internal static class DispatcherEmitter
         var usedNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (reducer, feature) in matching)
         {
-            var storeClass = StoreEmitter.GetStoreClassName(feature);
+            var storeClass = feature.StoreClassName;
             var stateFqn = feature.FullyQualifiedName;
             var storeVar = LocalNameFor(feature);
             for (var suffix = 2; !usedNames.Add(storeVar); suffix++)

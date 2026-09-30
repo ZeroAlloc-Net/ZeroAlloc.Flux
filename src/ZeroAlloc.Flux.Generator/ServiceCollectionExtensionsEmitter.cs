@@ -59,7 +59,7 @@ internal static class ServiceCollectionExtensionsEmitter
 
     private static void EmitStoreRegistration(StringBuilder sb, FeatureInfo feature)
     {
-        var storeClass = StoreEmitter.GetStoreClassName(feature);
+        var storeClass = feature.StoreClassName;
         var stateFqn = feature.FullyQualifiedName;
 
         if (feature.InitialStateFactoryName is not null)

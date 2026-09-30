@@ -53,6 +53,7 @@ internal static class ReducerDiscovery
                 method.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 method.Name,
                 stateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                stateType.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 actionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 methodDisplay,
                 LocationInfo.From(SourceLocations.Of(method)),

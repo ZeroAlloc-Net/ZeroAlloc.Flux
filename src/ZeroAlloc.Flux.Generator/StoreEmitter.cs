@@ -1,9 +1,11 @@
+using System.Globalization;
 using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace ZeroAlloc.Flux.Generator;
 
 /// <summary>
-/// Emits the per-feature <c>Store_&lt;Mangle&gt;</c> class that implements
+/// Emits the per-feature <c>Store_&lt;QualifiedName&gt;</c> class that implements
 /// <c>IStore&lt;TFeature&gt;</c>. Two code paths:
 /// <list type="bullet">
 ///   <item><b>Struct features</b> — writers are guarded by a private <c>object _lock</c>; the
@@ -27,18 +29,63 @@ internal static class StoreEmitter
     public const string GeneratedNamespace = "ZeroAlloc.Flux.Generated";
 
     /// <summary>
-    /// Class name for the store implementation of <paramref name="feature"/>. Format is
-    /// <c>Store_&lt;FullyQualifiedName-without-global::-and-dots-replaced-by-underscores&gt;</c>.
+    /// Class name for the store implementation of <paramref name="feature"/>, unique in the
+    /// compilation. It is qualified by the same parts as the store's hint name, see
+    /// <see cref="HintNames.ForFeature"/>, written as one identifier: <c>Store_</c>, then the
+    /// namespace, containing types and feature, where a namespace dot is written as <c>_</c>, a
+    /// nesting <c>+</c> as <c>_2</c>, an arity <c>`n</c> as <c>_3n</c>, and a <c>_</c> in a name as
+    /// <c>_1</c>. For example <c>App.CounterState</c> is <c>Store_App_CounterState</c>,
+    /// <c>App_X.CounterState</c> is <c>Store_App_1X_CounterState</c>, and <c>App.Outer.CounterState</c>,
+    /// nested in <c>Outer</c>, is <c>Store_App_Outer_2CounterState</c>.
     /// </summary>
-    public static string GetStoreClassName(FeatureInfo feature)
+    /// <remarks>
+    /// Every <c>_</c> in the result starts a two-character token whose second character says
+    /// what it is: <c>1</c>, <c>2</c> or <c>3</c> for the tokens above, anything else for a dot
+    /// followed by the next name, which cannot start with a digit. So the name can be read back
+    /// and two features never share one, while the common case keeps the name it had before
+    /// #142. The old name replaced every dot with <c>_</c> and kept the <c>_</c> in names, so
+    /// <c>App_X.CounterState</c> and <c>App.X_CounterState</c> shared it. No store is generated for
+    /// a generic feature, see ZFLUX006, but its name is still well defined.
+    /// </remarks>
+    public static string GetStoreClassName(INamedTypeSymbol feature)
     {
-        var fqn = feature.FullyQualifiedName;
-        const string globalPrefix = "global::";
-        if (fqn.StartsWith(globalPrefix, System.StringComparison.Ordinal))
+        var sb = new StringBuilder("Store");
+        AppendNamespace(sb, feature.ContainingNamespace);
+        AppendTypeChain(sb, feature);
+        return sb.ToString();
+    }
+
+    private static void AppendNamespace(StringBuilder sb, INamespaceSymbol? ns)
+    {
+        if (ns is null || ns.IsGlobalNamespace) return;
+        AppendNamespace(sb, ns.ContainingNamespace);
+        sb.Append('_');
+        AppendEscaped(sb, ns.Name);
+    }
+
+    private static void AppendTypeChain(StringBuilder sb, INamedTypeSymbol type)
+    {
+        if (type.ContainingType is { } outer)
         {
-            fqn = fqn.Substring(globalPrefix.Length);
+            AppendTypeChain(sb, outer);
+            sb.Append("_2");
         }
-        return "Store_" + fqn.Replace('.', '_');
+        else
+        {
+            sb.Append('_');
+        }
+
+        AppendEscaped(sb, type.Name);
+        if (type.Arity > 0) sb.Append("_3").Append(type.Arity.ToString(CultureInfo.InvariantCulture));
+    }
+
+    private static void AppendEscaped(StringBuilder sb, string name)
+    {
+        foreach (var c in name)
+        {
+            if (c == '_') sb.Append("_1");
+            else sb.Append(c);
+        }
     }
 
     /// <summary>
@@ -46,7 +93,7 @@ internal static class StoreEmitter
     /// </summary>
     public static string Emit(FeatureInfo feature)
     {
-        var className = GetStoreClassName(feature);
+        var className = feature.StoreClassName;
         var stateType = feature.FullyQualifiedName;
         var sb = new StringBuilder();
 
