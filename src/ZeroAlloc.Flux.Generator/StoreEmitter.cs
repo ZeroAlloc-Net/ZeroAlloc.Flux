@@ -6,10 +6,12 @@ namespace ZeroAlloc.Flux.Generator;
 /// Emits the per-feature <c>Store_&lt;Mangle&gt;</c> class that implements
 /// <c>IStore&lt;TFeature&gt;</c>. Two code paths:
 /// <list type="bullet">
-///   <item><b>Struct features</b> — guarded by a private <c>object _lock</c>; writes atomic
-///         under the monitor, reads lock-free.</item>
-///   <item><b>Class features</b> — CAS loop via <see cref="System.Threading.Interlocked"/>
-///         on the reference field; no monitor needed.</item>
+///   <item><b>Struct features</b> — guarded by a private <c>object _lock</c>; the reducer runs,
+///         and its result is written, under the monitor. Reads are lock-free.</item>
+///   <item><b>Class features</b> — CAS retry loop via <see cref="System.Threading.Interlocked"/>
+///         on the reference field: read, reduce, and swap only if the field still holds the
+///         instance that was read, else retry. The reducer can run more than once per dispatch,
+///         so it must be pure. No monitor needed.</item>
 /// </list>
 /// The emitted class lives in the synthetic <c>ZeroAlloc.Flux.Generated</c> namespace so the
 /// mangled type name never collides with consumer code.
