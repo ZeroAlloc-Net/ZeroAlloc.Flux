@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.8](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.7...v1.1.8) (2026-09-30)
+
+
+### Bug Fixes
+
+* give every generated store a unique class name, and reject features no store can serve ([#144](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/144)) ([03b0f3c](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/03b0f3ccaf91efbd5d9260e9071628411e34d889)), closes [#142](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/142)
+* name store files after the feature's namespace, containing types and arity ([#143](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/143)) ([d3c1fa0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/d3c1fa0bcade73ca1f2d70966a35aac7476ef6dc)), closes [#141](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/141)
+* read struct feature state through a sequence lock so Value is never torn ([#139](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/139)) ([0f2b5bf](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/0f2b5bf330695c3acc817b6c1c3fe2e103158735)), closes [#134](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/134)
+
 ## [1.1.7](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.6...v1.1.7) (2026-09-30)
 
 
