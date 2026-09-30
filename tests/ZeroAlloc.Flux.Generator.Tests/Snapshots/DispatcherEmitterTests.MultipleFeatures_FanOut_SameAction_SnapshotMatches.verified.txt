@@ -24,11 +24,9 @@ internal sealed class FluxDispatcher : IDispatcher
         static async ValueTask Fan(IServiceProvider sp, global::Sample.PingAction action)
         {
             var store_CounterState = (Store_Sample_CounterState)sp.GetRequiredService<IStore<global::Sample.CounterState>>();
-            var newstore_CounterState = global::Sample.CounterReducers.On(store_CounterState.Value, action);
-            await store_CounterState.UpdateAsync(newstore_CounterState).ConfigureAwait(false);
+            await store_CounterState.UpdateAsync(action, static (s, a) => global::Sample.CounterReducers.On(s, a)).ConfigureAwait(false);
             var store_AuditState = (Store_Sample_AuditState)sp.GetRequiredService<IStore<global::Sample.AuditState>>();
-            var newstore_AuditState = global::Sample.AuditReducers.On(store_AuditState.Value, action);
-            await store_AuditState.UpdateAsync(newstore_AuditState).ConfigureAwait(false);
+            await store_AuditState.UpdateAsync(action, static (s, a) => global::Sample.AuditReducers.On(s, a)).ConfigureAwait(false);
         }
     }
 

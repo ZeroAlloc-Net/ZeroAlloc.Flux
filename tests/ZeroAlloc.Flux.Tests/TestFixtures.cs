@@ -46,3 +46,18 @@ public static partial class SettingsReducers
     public static SettingsState On(SettingsState state, UpdateThemeAction action)
         => state with { Theme = action.NewTheme };
 }
+
+// Record-class feature with a counting reducer, for the concurrent-dispatch tests of the CAS path.
+[Feature]
+public sealed partial record TallyState(int Count)
+{
+    public TallyState() : this(0) { }
+}
+
+public readonly record struct TallyAction;
+
+public static partial class TallyReducers
+{
+    [Reducer]
+    public static TallyState On(TallyState state, TallyAction _) => new(state.Count + 1);
+}

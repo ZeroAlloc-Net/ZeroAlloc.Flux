@@ -23,7 +23,8 @@ public sealed class AllocationBudgetTests
     public void DispatchAsync_SyncPath_ZeroAllocation()
     {
         // Single-feature dispatch with no subscribers. The generator emits a straight-line
-        // return store.UpdateAsync(reducer.On(state, action)); the JIT collapses the
+        // return store.UpdateAsync(action, static (s, a) => Reducer.On(s, a)); the lambda is
+        // non-capturing, so the compiler caches its delegate, and the JIT collapses the
         // interface-level typeof-chain to a direct call for the known TAction. Budget: 0 B.
         var services = new ServiceCollection();
         services.AddZeroAllocFlux();

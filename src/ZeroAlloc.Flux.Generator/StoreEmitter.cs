@@ -84,23 +84,36 @@ internal static class StoreEmitter
         sb.Append("    public event Action<").Append(stateType).AppendLine(">? StateChanged;");
         sb.AppendLine();
 
-        sb.Append("    internal ValueTask UpdateAsync(").Append(stateType).AppendLine(" newState)");
+        // The reducer runs inside the atomic section, on the state it replaces. Computing the new
+        // state outside it and writing it afterwards loses concurrent updates, see #131.
+        sb.AppendLine("    internal ValueTask UpdateAsync<TAction>(");
+        sb.AppendLine("        TAction action,");
+        sb.Append("        Func<").Append(stateType).Append(", TAction, ").Append(stateType).AppendLine("> reducer)");
         sb.AppendLine("    {");
+        sb.Append("        ").Append(stateType).AppendLine(" newState;");
         if (feature.IsStruct)
         {
             sb.AppendLine("        lock (_lock)");
             sb.AppendLine("        {");
+            sb.AppendLine("            newState = reducer(_state, action);");
             sb.AppendLine("            _state = newState;");
             sb.AppendLine("        }");
         }
         else
         {
-            sb.Append("        ").Append(stateType).AppendLine(" oldState;");
-            sb.AppendLine("        do");
+            // ReferenceEquals, not the record's value equality: the swap succeeded only when
+            // the field still holds the very instance the reducer ran on.
+            sb.AppendLine("        while (true)");
             sb.AppendLine("        {");
-            sb.AppendLine("            oldState = _state;");
+            sb.AppendLine("            var oldState = System.Threading.Volatile.Read(ref _state);");
+            sb.AppendLine("            newState = reducer(oldState, action);");
+            sb.AppendLine("            if (object.ReferenceEquals(");
+            sb.AppendLine("                System.Threading.Interlocked.CompareExchange(ref _state, newState, oldState),");
+            sb.AppendLine("                oldState))");
+            sb.AppendLine("            {");
+            sb.AppendLine("                break;");
+            sb.AppendLine("            }");
             sb.AppendLine("        }");
-            sb.AppendLine("        while (System.Threading.Interlocked.CompareExchange(ref _state, newState, oldState) != oldState);");
         }
         sb.AppendLine("        StateChanged?.Invoke(newState);");
         sb.AppendLine("        return ValueTask.CompletedTask;");

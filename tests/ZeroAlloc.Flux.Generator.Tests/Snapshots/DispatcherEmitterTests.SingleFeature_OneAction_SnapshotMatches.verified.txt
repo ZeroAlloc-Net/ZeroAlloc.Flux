@@ -20,7 +20,7 @@ internal sealed class FluxDispatcher : IDispatcher
     public ValueTask DispatchAsync(global::Sample.IncrementAction action)
     {
         var store_CounterState = (Store_Sample_CounterState)_sp.GetRequiredService<IStore<global::Sample.CounterState>>();
-        return store_CounterState.UpdateAsync(global::Sample.CounterReducers.On(store_CounterState.Value, action));
+        return store_CounterState.UpdateAsync(action, static (s, a) => global::Sample.CounterReducers.On(s, a));
     }
 
     public ValueTask DispatchAsync<TAction>(TAction action)
