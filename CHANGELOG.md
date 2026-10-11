@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.8...v1.1.9) (2026-10-11)
+
+
+### Performance Improvements
+
+* cache the StateHasChanged delegate in FluxComponent ([#151](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/151)) ([778ca36](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/778ca36c4f8fbbc0a4157fb6e799f0c50c401e72)), closes [#150](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/150)
+
 ## [1.1.8](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.7...v1.1.8) (2026-09-30)
 
 
