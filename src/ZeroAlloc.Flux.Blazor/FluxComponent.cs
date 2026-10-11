@@ -19,6 +19,18 @@ public abstract class FluxComponent : ComponentBase, IDisposable
 {
     private readonly List<Action> _unsubscribers = new();
 
+    // StateHasChanged as a delegate, created once per component. Passing the method group to
+    // InvokeAsync directly would allocate a new Action on every store change.
+    private readonly Action _stateHasChanged;
+
+    /// <summary>
+    /// Initializes the component.
+    /// </summary>
+    protected FluxComponent()
+    {
+        _stateHasChanged = StateHasChanged;
+    }
+
     /// <summary>
     /// Override to subscribe each injected <see cref="IStore{TState}"/> via
     /// <see cref="Subscribe{TState}"/>. Called from <see cref="ComponentBase.OnInitialized"/>.
@@ -35,7 +47,7 @@ public abstract class FluxComponent : ComponentBase, IDisposable
         Action<TState> handler = state =>
         {
             onChange?.Invoke(state);
-            _ = InvokeAsync(StateHasChanged);
+            _ = InvokeAsync(_stateHasChanged);
         };
         store.StateChanged += handler;
         _unsubscribers.Add(() => store.StateChanged -= handler);

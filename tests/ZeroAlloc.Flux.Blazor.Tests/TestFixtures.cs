@@ -36,3 +36,22 @@ public sealed class TestCounter : FluxComponent
         builder.CloseElement();
     }
 }
+
+// A FluxComponent that never re-renders after its first render. StateHasChanged then returns
+// before queueing a render, so the allocation test measures only the FluxComponent's own
+// store-change handler: the reducer, the StateChanged event and the InvokeAsync call.
+public sealed class QuietCounter : FluxComponent
+{
+    [Inject] public IStore<TestCounterState> Store { get; set; } = default!;
+
+    protected override void SubscribeStores() => Subscribe(Store);
+
+    protected override bool ShouldRender() => false;
+
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "p");
+        builder.AddContent(1, Store.Value.Count);
+        builder.CloseElement();
+    }
+}

@@ -17,5 +17,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="bunit" Version="2.11.3" />
+    <PackageReference Include="ZeroAlloc.TestHelpers" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>contentfiles;build</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>

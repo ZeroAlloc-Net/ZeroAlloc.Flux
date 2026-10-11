@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Main package: attribute types and the IDispatcher / IStore contracts -->
+    <ProjectReference Include="..\..\src\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />
+    <!-- Generator: emits the dispatcher, stores and AddZeroAllocFlux for this project's features -->
+    <ProjectReference Include="..\..\src\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+  </ItemGroup>
+</Project>
