@@ -3,6 +3,7 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using ZeroAlloc.Flux;
 using ZeroAlloc.Flux.Generated;
+using ZeroAlloc.TestHelpers;
 using Xunit;
 
 namespace ZeroAlloc.Flux.Blazor.Tests;
@@ -49,5 +50,39 @@ public sealed class FluxComponentTests : Bunit.BunitContext
         // we can verify the store's external subscriber DID fire — meaning the dispatch
         // happened, but the FluxComponent's handler is gone).
         Assert.Equal(1, updatesAfterDispose);
+    }
+
+    [Fact]
+    public async Task Dispatch_ToSubscribedComponent_ZeroAllocation()
+    {
+        // DispatchAsync -> Store.UpdateAsync -> StateChanged -> the FluxComponent handler, which
+        // calls InvokeAsync with StateHasChanged. Measured on the renderer's dispatcher so
+        // InvokeAsync runs the work item inline, and against a component whose ShouldRender is
+        // false so StateHasChanged queues no render. What remains is the handler itself, which
+        // used to allocate an Action for the StateHasChanged method group on every change.
+        Services.AddZeroAllocFlux();
+        Services.AddZeroAllocFluxBlazor();
+
+        Render<QuietCounter>();
+        var dispatcher = Services.GetRequiredService<IDispatcher>();
+        var action = new IncrementTestAction(1);
+
+        await Renderer.Dispatcher.InvokeAsync(() =>
+            AllocationGate.AssertBudget(
+                budgetBytes: 0,
+                iterations: 1000,
+                action: () =>
+                {
+                    var t = dispatcher.DispatchAsync(action);
+                    if (!t.IsCompletedSuccessfully)
+                    {
+                        throw new System.InvalidOperationException(
+                            "AllocationGate: DispatchAsync did not complete synchronously — " +
+                            "awaiter machinery would pollute the measurement.");
+                    }
+                },
+                label: "DispatchAsync to a subscribed FluxComponent"));
+
+        Assert.Equal(1002, Services.GetRequiredService<IStore<TestCounterState>>().Value.Count);
     }
 }

@@ -50,6 +50,48 @@ public sealed class AllocationBudgetTests
     }
 
     [Fact]
+    public void DispatchAsync_WithStateChangedSubscribers_ZeroAllocation()
+    {
+        // The full documented hot path: DispatchAsync fans IncrementAction out to two features,
+        // each Store_*.UpdateAsync runs its reducer and raises StateChanged to a subscriber.
+        // Subscribing allocates the handler once, outside the measured loop; raising the event
+        // must not allocate. Budget: 0 B.
+        var services = new ServiceCollection();
+        services.AddZeroAllocFlux();
+        using var sp = services.BuildServiceProvider();
+
+        var dispatcher = sp.GetRequiredService<IDispatcher>();
+        var counter = sp.GetRequiredService<IStore<CounterState>>();
+        var badge = sp.GetRequiredService<IStore<BadgeCountState>>();
+        var notifications = 0;
+        Action<CounterState> onCounter = _ => notifications++;
+        Action<BadgeCountState> onBadge = _ => notifications++;
+        counter.StateChanged += onCounter;
+        badge.StateChanged += onBadge;
+        var action = new IncrementAction(1);
+
+        AllocationGate.AssertBudget(
+            budgetBytes: 0,
+            iterations: 1000,
+            action: () =>
+            {
+                var t = dispatcher.DispatchAsync(action);
+                if (!t.IsCompletedSuccessfully)
+                {
+                    throw new InvalidOperationException(
+                        "AllocationGate: DispatchAsync did not complete synchronously — " +
+                        "awaiter machinery would pollute the measurement.");
+                }
+            },
+            label: "DispatchAsync (IncrementAction, two features, StateChanged subscribers)");
+
+        // Two warm-up dispatches plus 1000 measured ones, each notifying both subscribers.
+        Assert.Equal(2 * 1002, notifications);
+        counter.StateChanged -= onCounter;
+        badge.StateChanged -= onBadge;
+    }
+
+    [Fact]
     public void StoreValue_Getter_ZeroAllocation()
     {
         // Library promise: IStore<T>.Value is a lock-free read. With T == record struct, the

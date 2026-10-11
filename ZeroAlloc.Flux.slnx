@@ -9,6 +9,9 @@
     <Project Path="tests/ZeroAlloc.Flux.Generator.Tests/ZeroAlloc.Flux.Generator.Tests.csproj" />
     <Project Path="tests/ZeroAlloc.Flux.Blazor.Tests/ZeroAlloc.Flux.Blazor.Tests.csproj" />
   </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/ZeroAlloc.Flux.Benchmarks/ZeroAlloc.Flux.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/ZeroAlloc.Flux.Sample/ZeroAlloc.Flux.Sample.csproj" />
     <Project Path="samples/ZeroAlloc.Flux.AotSmoke/ZeroAlloc.Flux.AotSmoke.csproj" />
