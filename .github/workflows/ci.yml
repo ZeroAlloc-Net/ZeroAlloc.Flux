@@ -46,7 +46,7 @@ jobs:
         run: dotnet test --no-build -c Release --verbosity normal
 
       - name: Build the Blazor WebAssembly smoke
-        run: dotnet build samples/ZeroAlloc.Flux.WasmSmoke -c Release
+        run: dotnet build samples/ZeroAlloc.Flux.WasmSmoke --no-restore -c Release -p:Version=${{ steps.gitversion.outputs.version }}
 
       - name: Pack
         run: |
