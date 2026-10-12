@@ -15,5 +15,6 @@
   <Folder Name="/samples/">
     <Project Path="samples/ZeroAlloc.Flux.Sample/ZeroAlloc.Flux.Sample.csproj" />
     <Project Path="samples/ZeroAlloc.Flux.AotSmoke/ZeroAlloc.Flux.AotSmoke.csproj" />
+    <Project Path="samples/ZeroAlloc.Flux.WasmSmoke/ZeroAlloc.Flux.WasmSmoke.csproj" />
   </Folder>
 </Solution>

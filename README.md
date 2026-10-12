@@ -65,13 +65,22 @@ public partial class Counter : FluxComponent
 <button @onclick="async () => await Dispatcher.DispatchAsync(new IncrementAction(1))">+</button>
 ```
 
+`FluxComponent` re-renders when a store it subscribes to changes. Subscribe in `SubscribeStores()`:
+
+```csharp
+protected override void SubscribeStores() => Subscribe(CounterStore);
+```
+
+A component that overrides `OnInitialized` must call `base.OnInitialized()`, or it never subscribes.
+
 ## Why ZeroAlloc.Flux
 
 - **Compile-time dispatch.** Every `DispatchAsync<TAction>` overload is generated from the discovered `[Reducer]` set. The dispatcher is a static `switch` — no dictionary lookups, no reflection.
 - **Zero allocation hot path.** Sync-completing dispatch returns a `ValueTask.CompletedTask`-equivalent — no state-machine box, no closure capture.
 - **AOT-compatible.** No reflection, no dynamic code. `<IsAotCompatible>true</IsAotCompatible>` enforced on every csproj.
 - **Flux-coherent semantics.** One action, many feature listeners — fan-out matches Fluxor/Redux conventions.
-- **Family integration.** Effects via `ZeroAlloc.Mediator.INotificationHandler<TAction>` (v1.1). Notify integration via `ZeroAlloc.Notify` (v1.1).
+- **Effects are yours.** 1.1.x ships no effects package. Write an effect as a service that injects `IDispatcher`,
+  does its async work, and dispatches the result as another action.
 
 ## Documentation
 
