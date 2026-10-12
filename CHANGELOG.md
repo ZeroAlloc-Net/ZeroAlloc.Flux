@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.11](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.10...v1.1.11) (2026-10-12)
+
+
+### Bug Fixes
+
+* **blazor:** reference components so the package builds for blazor webassembly ([#156](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/156)) ([e545d66](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/e545d663d647d84ed988573f53688d4d205890fa))
+
 ## [1.1.10](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.9...v1.1.10) (2026-10-12)
 
 
