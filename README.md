@@ -57,6 +57,8 @@ public partial class Counter : FluxComponent
 {
     [Inject] public IStore<CounterState> CounterStore { get; set; } = default!;
     [Inject] public IDispatcher Dispatcher { get; set; } = default!;
+
+    protected override void SubscribeStores() => Subscribe(CounterStore);
 }
 ```
 
