@@ -63,9 +63,7 @@ public abstract class FluxComponent : ComponentBase, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-#pragma warning disable HLQ012 // Use CollectionsMarshal.AsSpan — clarity wins for a tiny disposal list.
         foreach (var unsub in _unsubscribers) unsub();
-#pragma warning restore HLQ012
         _unsubscribers.Clear();
     }
 }
