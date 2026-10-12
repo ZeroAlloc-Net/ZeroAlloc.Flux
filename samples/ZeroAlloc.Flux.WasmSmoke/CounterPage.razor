@@ -1,0 +1,11 @@
+@page "/"
+@inherits ZeroAlloc.Flux.Blazor.FluxComponent
+@inject ZeroAlloc.Flux.IStore<CounterState> Counter
+@inject ZeroAlloc.Flux.IDispatcher Dispatcher
+
+<p>Count: @Counter.Value.Count</p>
+<button @onclick="@(async () => await Dispatcher.DispatchAsync(new Increment()))">+</button>
+
+@code {
+    protected override void SubscribeStores() => Subscribe(Counter);
+}
