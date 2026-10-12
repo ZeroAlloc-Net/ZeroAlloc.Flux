@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.10](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.9...v1.1.10) (2026-10-12)
+
+
+### Code Refactoring
+
+* remove NetFabric.Hyperlinq.Analyzer ([#154](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/154)) ([8992027](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/8992027eb299ac200131ae5967cd39510145ced6))
+
 ## [1.1.9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.8...v1.1.9) (2026-10-11)
 
 
