@@ -3,9 +3,10 @@ using System;
 namespace ZeroAlloc.Flux;
 
 /// <summary>
-/// Marks a <c>public static</c> method as a Flux reducer. The method's first parameter
-/// must be a type decorated with <see cref="FeatureAttribute"/>; the second parameter is the
-/// action type. The return type must match the first parameter type.
+/// Marks a <c>public static</c> method as a Flux reducer. The method takes exactly two
+/// parameters: the first must be a type decorated with <see cref="FeatureAttribute"/>, and the
+/// second is the action type. Neither may be <c>ref</c> or <c>out</c>. The return type must match
+/// the first parameter type. Any other signature fires <c>ZFLUX003</c> at compile time.
 /// </summary>
 /// <remarks>
 /// <para>Within a single feature, two reducers targeting the same action type fire

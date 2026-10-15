@@ -7,7 +7,7 @@ namespace ZeroAlloc.Flux.Generator;
 
 /// <summary>
 /// Builds a <see cref="FeatureInfo"/> for each <c>[Feature]</c>-decorated type, with the
-/// ZFLUX004 to ZFLUX007 diagnostics that concern it alone.
+/// ZFLUX004 to ZFLUX007 and ZFLUX009 diagnostics that concern it alone.
 /// </summary>
 internal static class FeatureDiscovery
 {
@@ -63,10 +63,16 @@ internal static class FeatureDiscovery
 
         var initialStateError = InitialStateValidator.Validate(
             type, initialState, initialStateLocation, ctx.SemanticModel.Compilation);
-        if (initialStateError is not null) diagnostics.Add(initialStateError);
-
-        // A store is generated only for a closed type that the generated code can name.
+        // A store is generated only for a closed type that the generated code can name and create.
+        // A store whose InitialState factory cannot be called would not compile, so it is not
+        // generated either: ZFLUX004 is then the only error.
         var canGenerate = true;
+        if (initialStateError is not null)
+        {
+            canGenerate = false;
+            diagnostics.Add(initialStateError);
+        }
+
         if (IsGenericOrInGenericType(type))
         {
             // ZFLUX006 — at the feature type.
@@ -82,6 +88,16 @@ internal static class FeatureDiscovery
             canGenerate = false;
             diagnostics.Add(DiagnosticInfo.Create(
                 Diagnostics.ZFLUX007_FeatureNotAccessible,
+                SourceLocations.Of(type),
+                fqn));
+        }
+        else if (initialState is null && !HasParameterlessConstructor(type))
+        {
+            // ZFLUX009 — at the feature type. Without a factory the store creates the initial
+            // state with `new TState()`.
+            canGenerate = false;
+            diagnostics.Add(DiagnosticInfo.Create(
+                Diagnostics.ZFLUX009_FeatureHasNoParameterlessConstructor,
                 SourceLocations.Of(type),
                 fqn));
         }
@@ -109,6 +125,31 @@ internal static class FeatureDiscovery
         {
             if (t.Arity > 0) return true;
         }
+        return false;
+    }
+
+    /// <summary>
+    /// Whether the generated store can write <c>new TState()</c>. A struct always can. A class
+    /// can when it is not abstract and declares, or is given, a parameterless constructor that is
+    /// public, internal or protected internal. A record class with only a primary constructor
+    /// has none.
+    /// </summary>
+    private static bool HasParameterlessConstructor(INamedTypeSymbol type)
+    {
+        if (type.IsValueType) return true;
+        if (type.IsAbstract || type.IsStatic) return false;
+
+        foreach (var constructor in type.InstanceConstructors)
+        {
+            if (constructor.Parameters.Length == 0
+                && constructor.DeclaredAccessibility is Accessibility.Public
+                    or Accessibility.Internal
+                    or Accessibility.ProtectedOrInternal)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 

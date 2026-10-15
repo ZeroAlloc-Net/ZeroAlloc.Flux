@@ -26,13 +26,14 @@ namespace ZeroAlloc.Flux.Generator;
 /// <see cref="StoreEmitter.GetStoreClassName"/>.
 /// </param>
 /// <param name="CanGenerate">
-/// <see langword="false"/> when no store can be generated for the feature: it is generic or nested
-/// in a generic type, <c>ZFLUX006</c>, or not accessible to the rest of its assembly,
-/// <c>ZFLUX007</c>.
+/// <see langword="false"/> when no store can be generated for the feature: its InitialState
+/// factory is invalid, <c>ZFLUX004</c>, it is generic or nested in a generic type,
+/// <c>ZFLUX006</c>, it is not accessible to the rest of its assembly, <c>ZFLUX007</c>, or it has
+/// no InitialState factory and cannot be created with <c>new TState()</c>, <c>ZFLUX009</c>.
 /// </param>
 /// <param name="Location">The feature's identifier, where <c>ZFLUX008</c> is reported.</param>
 /// <param name="Diagnostics">
-/// ZFLUX004 to ZFLUX007 for this feature, found when it was built.
+/// ZFLUX004 to ZFLUX007 and ZFLUX009 for this feature, found when it was built.
 /// </param>
 internal sealed record FeatureInfo(
     string FullyQualifiedName,

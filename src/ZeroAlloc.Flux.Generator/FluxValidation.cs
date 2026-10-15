@@ -12,7 +12,8 @@ internal static class FluxValidation
     /// <summary>The validated model and every ZFLUX diagnostic, in report order.</summary>
     /// <param name="Features">
     /// The features to generate a store for: every discovered feature except those that report
-    /// ZFLUX006, ZFLUX007 or ZFLUX008. A feature with another diagnostic is still generated.
+    /// ZFLUX004, ZFLUX006, ZFLUX007, ZFLUX008 or ZFLUX009. A feature with another diagnostic is
+    /// still generated.
     /// </param>
     /// <param name="Reducers">The reducers whose state is one of <paramref name="Features"/>.</param>
     /// <param name="Diagnostics">The diagnostics to report.</param>
@@ -27,7 +28,7 @@ internal static class FluxValidation
     {
         var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
 
-        // ZFLUX004 to ZFLUX007, found per feature when its model was built.
+        // ZFLUX004 to ZFLUX007 and ZFLUX009, found per feature when its model was built.
         var candidates = new List<FeatureInfo>();
         var featureNames = new HashSet<string>(System.StringComparer.Ordinal);
         foreach (var f in rawFeatures)
