@@ -34,8 +34,9 @@ using ZeroAlloc.Flux;
 public readonly partial record struct CounterState(int Count);
 ```
 
-The store starts from `new CounterState()`, which for a record struct is `Count == 0`. To start
-from something else, see [Initial state](core-concepts.md#initial-state).
+The store starts from `new CounterState()`, which for a record struct is `Count == 0`. A record
+class needs a parameterless constructor for this. To start from something else, see
+[Initial state](core-concepts.md#initial-state).
 
 ## 2. Define the actions
 
@@ -48,8 +49,8 @@ public readonly record struct ResetAction;
 
 ## 3. Write the reducers
 
-A reducer is a `public static` method marked `[Reducer]`. It takes the current state and an action,
-and returns the new state:
+A reducer is a `public static` method marked `[Reducer]`. It takes exactly two parameters, the
+current state and an action, and returns the new state:
 
 ```csharp
 public static class CounterReducers

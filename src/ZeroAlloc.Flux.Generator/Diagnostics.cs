@@ -25,7 +25,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ZFLUX003_ReducerSignatureInvalid = new(
         id: "ZFLUX003",
         title: "[Reducer] method has invalid signature",
-        messageFormat: "Reducer '{0}' must be public static, accept at least two parameters, and return the same type as its first parameter",
+        messageFormat: "Reducer '{0}' must be public static, take exactly two parameters, the state and the action, passed by value or with in, and return the same type as its first parameter",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -66,6 +66,14 @@ internal static class Diagnostics
         id: "ZFLUX008",
         title: "Two [Feature] types have qualified names that differ only in case",
         messageFormat: "Feature '{0}' has the same qualified name as '{1}' apart from case, so no store is generated for it; rename one of them",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ZFLUX009_FeatureHasNoParameterlessConstructor = new(
+        id: "ZFLUX009",
+        title: "[Feature] type needs a parameterless constructor or an InitialState factory",
+        messageFormat: "Feature '{0}' has no public or internal parameterless constructor and no InitialState factory, so no store is generated for it; add a parameterless constructor or set [Feature(InitialState = ...)]",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

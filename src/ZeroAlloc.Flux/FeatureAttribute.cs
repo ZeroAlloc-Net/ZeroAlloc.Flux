@@ -11,7 +11,9 @@ namespace ZeroAlloc.Flux;
 /// <para>For features that need DI-bound or configuration-bound initialization, set
 /// <see cref="InitialState"/> to the name of a <c>public static TState Method(IServiceProvider sp)</c>
 /// factory method on the same type. Defaults to <see langword="null"/> — initial state is
-/// produced via the parameterless constructor (<c>new TState()</c>).</para>
+/// produced via the parameterless constructor (<c>new TState()</c>). A class with no public or
+/// internal parameterless constructor, such as a record class with only a primary constructor,
+/// then fires <c>ZFLUX009</c> at compile time.</para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public sealed class FeatureAttribute : Attribute

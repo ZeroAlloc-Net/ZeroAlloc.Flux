@@ -33,7 +33,10 @@ public sealed class StoreEmitterTests
             namespace Sample;
 
             [Feature]
-            public sealed partial record CounterState(int Count);
+            public sealed partial record CounterState(int Count)
+            {
+                public CounterState() : this(0) { }
+            }
             """;
 
         VerifyEmit(source);

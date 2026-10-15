@@ -39,6 +39,9 @@ A feature type must be:
 - **Not generic**, and not nested in a generic type ([ZFLUX006](diagnostics.md#zflux006)).
 - **`public` or `internal`**, as must every type that contains it
   ([ZFLUX007](diagnostics.md#zflux007)).
+- **Creatable with `new TState()`**, unless it names an `InitialState` factory. A record struct
+  always is; a record class needs a `public` or `internal` parameterless constructor
+  ([ZFLUX009](diagnostics.md#zflux009)).
 
 Treat the state as immutable: a reducer returns a new value instead of changing the old one.
 
@@ -59,7 +62,8 @@ are measured with.
 ### Initial state
 
 Without anything else, a store starts from `new TState()`. A record class with only a primary
-constructor has no parameterless constructor, so give it one:
+constructor has no parameterless constructor, which reports
+[ZFLUX009](diagnostics.md#zflux009), so give it one:
 
 ```csharp
 [Feature]
@@ -127,8 +131,9 @@ The rules:
 - The method is `public static`, and its return type is its first parameter's type
   ([ZFLUX003](diagnostics.md#zflux003)).
 - The state parameter's type is a `[Feature]` ([ZFLUX001](diagnostics.md#zflux001)).
-- Give a reducer exactly two parameters, the state and the action. The dispatcher calls it with
-  those two.
+- It takes exactly two parameters, the state and the action, neither `ref` nor `out`. The
+  dispatcher calls it with those two, so any other parameter list reports
+  [ZFLUX003](diagnostics.md#zflux003).
 - One class may hold at most one reducer per state and action pair
   ([ZFLUX002](diagnostics.md#zflux002)).
 - The class holding reducers can be any class; it does not need to be `partial` or `static`.

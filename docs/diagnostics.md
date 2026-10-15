@@ -20,6 +20,7 @@ starts with `ZFLUX`, and every one is an error, so the build stops until it is f
 | [ZFLUX006](#zflux006) | A `[Feature]` type is generic |
 | [ZFLUX007](#zflux007) | A `[Feature]` type is not accessible to the rest of its assembly |
 | [ZFLUX008](#zflux008) | Two `[Feature]` types have qualified names that differ only in case |
+| [ZFLUX009](#zflux009) | A `[Feature]` type has no parameterless constructor and no `InitialState` factory |
 
 The examples below each produce the error they describe.
 
@@ -72,7 +73,9 @@ earlier one as an additional location.
 
 **A `[Reducer]` method has an invalid signature.**
 
-A reducer must be `public static`, take the state and the action, and return the state type.
+A reducer must be `public static`, take exactly two parameters, the state and the action, and
+return the state type. The generated dispatcher calls it as `On(state, action)`, so a third
+parameter, even an optional one, is rejected, and so is a `ref` or `out` parameter; `in` is fine.
 
 ```csharp
 [Feature]
@@ -87,8 +90,19 @@ public static class ThemeReducers
 }
 ```
 
-**Fix:** make the method `public static` and return the new state:
-`public static ThemeState On(ThemeState state, ToggleTheme _) => new(!state.Dark);`
+A reducer with a third parameter is rejected the same way:
+
+```csharp
+public static class ThemeReducers
+{
+    [Reducer]
+    public static ThemeState On(ThemeState state, ToggleTheme _, bool force) => new(force || !state.Dark); // ZFLUX003
+}
+```
+
+**Fix:** make the method `public static`, give it exactly the state and the action, and return the
+new state: `public static ThemeState On(ThemeState state, ToggleTheme _) => new(!state.Dark);`.
+A reducer that needs more input gets it from the action.
 
 ## ZFLUX004
 
@@ -108,8 +122,7 @@ public readonly partial record struct LimitState(int Max)
 **Fix:** give the factory the expected signature:
 `public static LimitState Create(IServiceProvider services) => new(100);`. A factory that does not
 exist is reported at the `InitialState` argument, and one with the wrong signature at the method.
-The generated store still calls the factory, so a C# error such as CS1501 in the generated store
-file can appear next to ZFLUX004; it goes away with the fix.
+Until it is fixed the feature gets no store, so ZFLUX004 is the only error.
 
 ## ZFLUX005
 
@@ -177,3 +190,22 @@ namespace App
 ```
 
 **Fix:** rename one of the two types.
+
+## ZFLUX009
+
+**A `[Feature]` type has no parameterless constructor and no `InitialState` factory.**
+
+Without an `InitialState` factory, the generated store creates the initial state with
+`new TState()`. A record struct always allows that. A record class allows it only with a `public`
+or `internal` parameterless constructor, which a record class with only a primary constructor does
+not have. An `abstract` class cannot be created at all. Such a feature gets no store.
+
+```csharp
+[Feature]
+public sealed partial record SettingsState(string Theme); // ZFLUX009
+```
+
+**Fix:** add a parameterless constructor:
+`public SettingsState() : this("light") { }`, or name a factory with
+`[Feature(InitialState = nameof(Create))]`, see [ZFLUX004](#zflux004), or make the feature a
+`record struct`.

@@ -8,7 +8,7 @@ namespace ZeroAlloc.Flux.Generator;
 /// <summary>
 /// Builds a <see cref="ReducerCandidate"/> for each <c>[Reducer]</c>-decorated method and
 /// validates its signature against the Flux contract: <c>public static TState Method(TState,
-/// TAction, ...)</c>. Surfaces ZFLUX003 here, and ZFLUX002 through <see cref="FindDuplicates"/>.
+/// TAction)</c>. Surfaces ZFLUX003 here, and ZFLUX002 through <see cref="FindDuplicates"/>.
 /// </summary>
 internal static class ReducerDiscovery
 {
@@ -20,8 +20,10 @@ internal static class ReducerDiscovery
     /// here and projected into value data, so the candidate compares equal across compilations.
     /// </summary>
     /// <remarks>
-    /// ZFLUX003 is decided here: the method must be public and static, with at least two
-    /// parameters whose types are named types, and return its first parameter's type. ZFLUX001
+    /// ZFLUX003 is decided here: the method must be public and static, with exactly two
+    /// parameters whose types are named types, and return its first parameter's type. The
+    /// generated dispatcher calls it as <c>Method(state, action)</c>, so a third parameter, or a
+    /// <c>ref</c> or <c>out</c> one, could never be passed. ZFLUX001
     /// needs the full feature set, so it is checked later, in <see cref="FluxValidation"/>.
     /// </remarks>
     public static ReducerCandidate? Transform(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
@@ -34,7 +36,9 @@ internal static class ReducerDiscovery
         var signatureOk =
             method.DeclaredAccessibility == Accessibility.Public &&
             method.IsStatic &&
-            method.Parameters.Length >= 2 &&
+            method.Parameters.Length == 2 &&
+            IsPassedByValue(method.Parameters[0]) &&
+            IsPassedByValue(method.Parameters[1]) &&
             SymbolEqualityComparer.Default.Equals(method.ReturnType, method.Parameters[0].Type);
 
         if (!signatureOk
@@ -60,6 +64,13 @@ internal static class ReducerDiscovery
                 LocationInfo.From(SourceLocations.Of(method.Parameters[0]))),
             null);
     }
+
+    /// <summary>
+    /// The dispatcher passes the state and the action as plain arguments, which binds to a
+    /// by-value or <c>in</c> parameter but not to a <c>ref</c> or <c>out</c> one.
+    /// </summary>
+    private static bool IsPassedByValue(IParameterSymbol parameter)
+        => parameter.RefKind is RefKind.None or RefKind.In;
 
     /// <summary>
     /// ZFLUX002: within the same owning type, no two reducers may share (state, action).

@@ -58,6 +58,16 @@ public sealed class DiagnosticLocationTests
             public static CounterState [|On|](CounterState s) => s;
         }
         """)]
+    // ZFLUX003: a reducer with a third parameter, which the dispatcher could never pass.
+    [InlineData("ZFLUX003", Prelude + """
+        [Feature]
+        public readonly partial record struct CounterState(int Count);
+        public static class Reducers
+        {
+            [Reducer]
+            public static CounterState [|On|](CounterState s, IncrementAction a, int extra) => s;
+        }
+        """)]
     // ZFLUX004: the InitialState argument that names a factory that does not exist.
     [InlineData("ZFLUX004", Prelude + """
         [Feature([|InitialState = "DoesNotExist"|])]
@@ -88,6 +98,11 @@ public sealed class DiagnosticLocationTests
             [Feature]
             private readonly partial record struct [|HiddenState|](int Count);
         }
+        """)]
+    // ZFLUX009: the identifier of the feature that cannot be created with new TState().
+    [InlineData("ZFLUX009", Prelude + """
+        [Feature]
+        public sealed partial record [|SettingsState|](string Theme);
         """)]
     public void Diagnostic_IsReportedAtItsSourceLocation(string id, string markedSource)
     {

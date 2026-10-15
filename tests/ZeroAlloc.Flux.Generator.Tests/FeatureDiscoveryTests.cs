@@ -35,7 +35,10 @@ public sealed class FeatureDiscoveryTests
             namespace Sample;
 
             [Feature]
-            public sealed partial record CounterState(int Count);
+            public sealed partial record CounterState(int Count)
+            {
+                public CounterState() : this(0) { }
+            }
             """;
 
         var (features, diagnostics) = Discover(source);
@@ -55,7 +58,10 @@ public sealed class FeatureDiscoveryTests
             namespace Sample;
 
             [Feature]
-            public sealed record CounterState(int Count);
+            public sealed record CounterState(int Count)
+            {
+                public CounterState() : this(0) { }
+            }
             """;
 
         var (features, diagnostics) = Discover(source);
