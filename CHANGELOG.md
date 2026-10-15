@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.11...v1.2.0) (2026-10-15)
+
+
+### Features
+
+* report reducer and feature contracts the generated code cannot meet ([#164](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/164)) ([d79ea1f](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/d79ea1f8d58a01917914ad9c39b2b59608087cbb)), closes [#163](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/163)
+
+
+### Documentation
+
+* add the user guide for the zeroalloc.net docs site ([#162](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/162)) ([edad1a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/edad1a0d9162d9359e6752d63e1682134a5bb3d2))
+* remove the placeholder and correct the dispatch description in the README ([#160](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/160)) ([e0d9275](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/e0d927502f52371c66dbcf7fac8bc3a17539d4de))
+
 ## [1.1.11](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.10...v1.1.11) (2026-10-12)
 
 
