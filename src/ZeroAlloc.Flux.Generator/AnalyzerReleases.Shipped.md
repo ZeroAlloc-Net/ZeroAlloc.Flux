@@ -22,3 +22,11 @@ Rule ID  | Category       | Severity | Notes
 ZFLUX006 | ZeroAlloc.Flux | Error    | [Feature] type must not be generic
 ZFLUX007 | ZeroAlloc.Flux | Error    | [Feature] type must be accessible to the rest of its assembly
 ZFLUX008 | ZeroAlloc.Flux | Error    | Two [Feature] types have qualified names that differ only in case
+
+## Release 1.2.0
+
+### New Rules
+
+Rule ID  | Category       | Severity | Notes
+---------|----------------|----------|-----------------------------------------------------------------------------
+ZFLUX009 | ZeroAlloc.Flux | Error    | [Feature] type needs a parameterless constructor or an InitialState factory
