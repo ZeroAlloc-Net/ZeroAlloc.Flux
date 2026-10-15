@@ -2,10 +2,11 @@
 
 [![NuGet](https://img.shields.io/nuget/v/ZeroAlloc.Flux.svg)](https://www.nuget.org/packages/ZeroAlloc.Flux)
 [![Build](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/LICENSE)
 [![AOT](https://img.shields.io/badge/AOT--Compatible-passing-brightgreen)](https://learn.microsoft.com/dotnet/core/deploying/native-aot/)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-ZeroAlloc.Flux is a source-generated, zero-allocation Flux/Redux state management library for .NET 8 and .NET 10. The Roslyn source generator wires all action dispatch at compile time — no reflection, no runtime dictionaries, no virtual dispatch. Dispatch hot path allocates 0 bytes per call when handlers complete synchronously.
+ZeroAlloc.Flux is a source-generated, zero-allocation Flux/Redux state management library for .NET 8 and .NET 10. The Roslyn source generator wires all action dispatch at compile time — no reflection and no handler dictionaries; the only interface calls are `IDispatcher` and the store lookup. Dispatch hot path allocates 0 bytes per call when handlers complete synchronously.
 
 ## Install
 
@@ -77,17 +78,17 @@ A component that overrides `OnInitialized` must call `base.OnInitialized()`, or 
 
 ## Why ZeroAlloc.Flux
 
-- **Compile-time dispatch.** Every `DispatchAsync<TAction>` overload is generated from the discovered `[Reducer]` set. The dispatcher is a static `switch` — no dictionary lookups, no reflection.
+- **Compile-time dispatch.** The dispatcher is generated from the discovered `[Reducer]` set: `DispatchAsync<TAction>` is a chain of `typeof(TAction) ==` checks that the JIT folds to a direct call for each action type, then the matching reducers run against their stores. No handler dictionary, no reflection.
 - **Zero allocation hot path.** Sync-completing dispatch returns a `ValueTask.CompletedTask`-equivalent — no state-machine box, no closure capture.
-- **AOT-compatible.** No reflection, no dynamic code. `<IsAotCompatible>true</IsAotCompatible>` enforced on every csproj.
+- **AOT-compatible.** No reflection, no dynamic code. `<IsAotCompatible>true</IsAotCompatible>` on both runtime packages, and CI publishes a NativeAOT smoke app.
 - **Flux-coherent semantics.** One action, many feature listeners — fan-out matches Fluxor/Redux conventions.
 - **Effects are yours.** 1.1.x ships no effects package. Write an effect as a service that injects `IDispatcher`,
   does its async work, and dispatches the result as another action.
 
 ## Documentation
 
-(Placeholder — full docs land in v1.0 release.)
+Runnable examples live in [`samples/`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/samples): a console app, a Blazor WebAssembly counter, and the NativeAOT smoke test. The release history is in the [CHANGELOG](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/CHANGELOG.md).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/LICENSE).
