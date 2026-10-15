@@ -87,6 +87,8 @@ A component that overrides `OnInitialized` must call `base.OnInitialized()`, or 
 
 ## Documentation
 
+The user guide is in [`docs/`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/docs): [getting started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/getting-started.md), [core concepts](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/core-concepts.md), [Blazor](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/blazor.md), [performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/performance.md) and [diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/diagnostics.md).
+
 Runnable examples live in [`samples/`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/samples): a console app, a Blazor WebAssembly counter, and the NativeAOT smoke test. The release history is in the [CHANGELOG](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/CHANGELOG.md).
 
 ## License
