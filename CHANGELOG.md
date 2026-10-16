@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.2.1...v1.2.2) (2026-10-16)
+
+
+### Documentation
+
+* link the live flux.zeroalloc.net docs site ([#171](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/171)) ([15e0dfb](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/15e0dfb1a160325254224cde656852ef150040fd))
+
 ## [1.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.2.0...v1.2.1) (2026-10-16)
 
 
