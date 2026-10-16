@@ -6,91 +6,80 @@
 [![AOT](https://img.shields.io/badge/AOT--Compatible-passing-brightgreen)](https://learn.microsoft.com/dotnet/core/deploying/native-aot/)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-ZeroAlloc.Flux is a source-generated, zero-allocation Flux/Redux state management library for .NET 8 and .NET 10. The Roslyn source generator wires all action dispatch at compile time — no reflection and no handler dictionaries; the only interface calls are `IDispatcher` and the store lookup. Dispatch hot path allocates 0 bytes per call when handlers complete synchronously.
+Source-generated Flux/Redux state management for .NET and Blazor, an alternative to Fluxor: no reflection, no allocations when you dispatch, NativeAOT-ready.
+
+## Why ZeroAlloc.Flux
+
+- **0 B per dispatch.** Dispatching an action, fanning it out to several features, notifying subscribers and reading the state allocate nothing; tests assert each path on net8.0 and net10.0, including dispatch to a store that a Blazor `FluxComponent` subscribes to.
+- **Dispatch is generated code.** The dispatcher is built at compile time from your `[Reducer]` methods and resolves to a direct call per action type: no handler dictionary, no reflection.
+- **Works under NativeAOT and trimming.** CI publishes and runs a NativeAOT app, and builds a Blazor WebAssembly app, on every build.
+- **Compile-time diagnostics.** A wrong reducer signature, a duplicate reducer or a feature that is not `partial` stops the build with a `ZFLUX` error instead of failing at runtime.
 
 ## Install
 
-```shell
+```bash
 dotnet add package ZeroAlloc.Flux
-dotnet add package ZeroAlloc.Flux.Blazor   # for Blazor apps
 ```
 
-The Roslyn generator is bundled into the `ZeroAlloc.Flux` package — one `PackageReference` gives you both runtime contracts and the generator.
+The source generator ships inside the package. A console app also needs a DI container, for example `dotnet add package Microsoft.Extensions.DependencyInjection`; ASP.NET Core and Blazor already have one.
 
 ## Quick start
 
 ```csharp
+using Microsoft.Extensions.DependencyInjection;
 using ZeroAlloc.Flux;
+using ZeroAlloc.Flux.Generated;
 
-// 1. Define state — record struct (recommended) or record class.
-[Feature]
-public readonly partial record struct CounterState(int Count);
-
-// 2. Define actions — plain record struct, no marker interface.
-public readonly record struct IncrementAction(int Amount);
-public readonly record struct ResetAction;
-
-// 3. Define reducers — static methods, [Reducer] attribute.
-public static partial class CounterReducers
-{
-    [Reducer]
-    public static CounterState On(CounterState state, IncrementAction action)
-        => state with { Count = state.Count + action.Amount };
-
-    [Reducer]
-    public static CounterState On(CounterState state, ResetAction _) => new(0);
-}
-
-// 4. Register + dispatch.
-services.AddZeroAllocFlux();   // Scoped by default
-
+using var sp = new ServiceCollection().AddZeroAllocFlux().BuildServiceProvider();
 var dispatcher = sp.GetRequiredService<IDispatcher>();
 var counter = sp.GetRequiredService<IStore<CounterState>>();
 
-await dispatcher.DispatchAsync(new IncrementAction(5));
-Console.WriteLine(counter.Value.Count);   // 5
-```
+counter.StateChanged += state => Console.WriteLine($"Count is now {state.Count}");
 
-For Blazor:
+await dispatcher.DispatchAsync(new Increment(5));  // Count is now 5
+await dispatcher.DispatchAsync(new Increment(3));  // Count is now 8
 
-```csharp
-public partial class Counter : FluxComponent
+[Feature]
+public readonly partial record struct CounterState(int Count);
+
+public readonly record struct Increment(int Amount);
+
+public static class CounterReducers
 {
-    [Inject] public IStore<CounterState> CounterStore { get; set; } = default!;
-    [Inject] public IDispatcher Dispatcher { get; set; } = default!;
-
-    protected override void SubscribeStores() => Subscribe(CounterStore);
+    [Reducer]
+    public static CounterState On(CounterState state, Increment action)
+        => state with { Count = state.Count + action.Amount };
 }
 ```
 
-```razor
-<p>Count: @CounterStore.Value.Count</p>
-<button @onclick="async () => await Dispatcher.DispatchAsync(new IncrementAction(1))">+</button>
-```
+State is a record, actions are plain types with no marker interface, and reducers are static methods. The generator writes the store, the dispatcher and `AddZeroAllocFlux`.
 
-`FluxComponent` re-renders when a store it subscribes to changes. Subscribe in `SubscribeStores()`:
+## What you get
 
-```csharp
-protected override void SubscribeStores() => Subscribe(CounterStore);
-```
+- **Stores per state slice**, safe for concurrent dispatch and reads, with a `StateChanged` event. [Core concepts](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/core-concepts.md)
+- **One action, many features**: every reducer for an action runs, as in Redux and Fluxor.
+- **Custom initial state** through a factory that can use your services. [Initial state](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/core-concepts.md#initial-state)
+- **Effects as plain services** that inject `IDispatcher`, do async work and dispatch the result. [Effects](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/core-concepts.md#effects)
+- **Blazor support**: `ZeroAlloc.Flux.Blazor` adds `FluxComponent`, which re-renders when a store it subscribes to changes. [Blazor guide](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/blazor.md)
+- **Build-time checks**, ZFLUX001 to ZFLUX009. [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/diagnostics.md)
+- **Targets** `net8.0` and `net10.0`.
 
-A component that overrides `OnInitialized` must call `base.OnInitialized()`, or it never subscribes.
+## Performance
 
-## Why ZeroAlloc.Flux
+Exact allocation budgets, each asserted by an `AllocationGate` test over 1,000 calls in CI:
 
-- **Compile-time dispatch.** The dispatcher is generated from the discovered `[Reducer]` set: `DispatchAsync<TAction>` is a chain of `typeof(TAction) ==` checks that the JIT folds to a direct call for each action type, then the matching reducers run against their stores. No handler dictionary, no reflection.
-- **Zero allocation hot path.** Sync-completing dispatch returns a `ValueTask.CompletedTask`-equivalent — no state-machine box, no closure capture.
-- **AOT-compatible.** No reflection, no dynamic code. `<IsAotCompatible>true</IsAotCompatible>` on both runtime packages, and CI publishes a NativeAOT smoke app.
-- **Flux-coherent semantics.** One action, many feature listeners — fan-out matches Fluxor/Redux conventions.
-- **Effects are yours.** 1.1.x ships no effects package. Write an effect as a service that injects `IDispatcher`,
-  does its async work, and dispatches the result as another action.
+| Hot path | Allocated |
+|---|---|
+| `DispatchAsync` to one record struct feature | 0 B |
+| `DispatchAsync` fanned out to two features, each raising `StateChanged` to a subscriber | 0 B |
+| `IStore<TState>.Value` read | 0 B |
 
-## Documentation
+The budgets hold for the library's own work; a record class feature allocates the new state your reducer returns. What still allocates, why dispatch does not, and how to run the benchmarks: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/performance.md).
 
-The user guide is in [`docs/`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/docs): [getting started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/getting-started.md), [core concepts](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/core-concepts.md), [Blazor](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/blazor.md), [performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/performance.md) and [diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/diagnostics.md).
+## Learn more
 
-Runnable examples live in [`samples/`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/samples): a console app, a Blazor WebAssembly counter, and the NativeAOT smoke test. The release history is in the [CHANGELOG](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/CHANGELOG.md).
-
-## License
-
-MIT — see [LICENSE](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/LICENSE).
+- Documentation: [docs/](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/docs), starting with [getting started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/getting-started.md)
+- Runnable examples: [`samples/`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/samples) has a console app, a Blazor WebAssembly counter and the NativeAOT smoke test
+- Related packages: the [ZeroAlloc family](https://github.com/ZeroAlloc-Net), including [ZeroAlloc.Mediator](https://github.com/ZeroAlloc-Net/ZeroAlloc.Mediator) for request and notification dispatch
+- Contributing: issues and pull requests are welcome on [GitHub](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues)
+- License: [MIT](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/LICENSE)
