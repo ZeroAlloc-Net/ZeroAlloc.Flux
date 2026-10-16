@@ -28,6 +28,7 @@ jobs:
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       version: ${{ steps.release.outputs.version }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
       # Read by ship-release-tracking. A step output is only visible to another job
       # when the job re-exports it here; without these the job's `if:` is always false.
       prs_created: ${{ steps.release.outputs.prs_created }}
@@ -79,65 +80,22 @@ jobs:
       # its push triggers the release PR's checks like release-please's own.
       RELEASE_BOT_PRIVATE_KEY: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
 
+  # Builds the release tag, packs every packable project, checks the versions inside the
+  # packages, pushes them, and waits until nuget.org serves every one of them. Shared from
+  # ZeroAlloc-Net/.github so a fix there reaches every repository; see ZeroAlloc-Net/.github#49.
   publish:
     needs: release-please
-    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-dotnet@v6
-        with:
-          # Installs the SDK global.json pins. Without it the job never installs
-          # that SDK at all and only works when the runner image happens to ship one
-          # satisfying the pin, which is how a publish failed on a lagging image.
-          global-json-file: global.json
-          dotnet-version: 10.0.x
-
-      - name: Build
-        run: dotnet build -c Release -p:Version=${{ needs.release-please.outputs.version }}
-
-      - name: Test
-        run: dotnet test -c Release --no-build
-
-      - name: Pack all packages at the release version
-        env:
-          VERSION: ${{ needs.release-please.outputs.version }}
-        run: |
-          set -euo pipefail
-          if [ -z "$VERSION" ]; then
-            echo "::error::release-please reported a release but produced no version"
-            exit 1
-          fi
-          mkdir -p ./nupkg
-
-          # Every package ships at the same version, so the assembly stamped by the build
-          # step above is already correct and pack only has to label the package. Projects
-          # opt out with IsPackable false -- ZeroAlloc.Flux.Generator does, because it is
-          # bundled into ZeroAlloc.Flux as analyzers/dotnet/cs rather than published.
-          for csproj in src/*/*.csproj; do
-            if grep -q "<IsPackable>false</IsPackable>" "$csproj"; then
-              echo "Skipping $csproj (not packable)"
-              continue
-            fi
-            echo "Packing $csproj at $VERSION"
-            dotnet pack "$csproj" -c Release --no-build -p:PackageVersion="$VERSION" -o ./nupkg
-          done
-
-          ls -la ./nupkg
-
-      - name: Push to NuGet
-        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-
-      - name: Upload to GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.release-please.outputs.version }}
-        run: |
-          set -euo pipefail
-          # One component, and release-please-config.json leaves the component out of the
-          # tag, so the tag is simply v<version>.
-          echo "Uploading packages to v$VERSION"
-          gh release upload "v$VERSION" ./nupkg/*.nupkg --clobber
+    if: needs.release-please.outputs.releases_created == 'true'
+    uses: ZeroAlloc-Net/.github/.github/workflows/publish.yml@main
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+      version: ${{ needs.release-please.outputs.version }}
+      solution: ZeroAlloc.Flux.slnx
+      # Runtimes the tests target, besides the SDK that global.json pins.
+      dotnet-version: |
+        8.0.x
+        10.0.x
+      github-packages: false
+      release-assets: true
+    secrets:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
