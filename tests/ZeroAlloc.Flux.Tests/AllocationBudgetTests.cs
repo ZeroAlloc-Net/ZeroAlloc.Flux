@@ -69,12 +69,14 @@ public sealed class AllocationBudgetTests
         counter.StateChanged += onCounter;
         badge.StateChanged += onBadge;
         var action = new IncrementAction(1);
+        var dispatches = 0;
 
         AllocationGate.AssertBudget(
             budgetBytes: 0,
             iterations: 1000,
             action: () =>
             {
+                dispatches++;
                 var t = dispatcher.DispatchAsync(action);
                 if (!t.IsCompletedSuccessfully)
                 {
@@ -85,8 +87,9 @@ public sealed class AllocationBudgetTests
             },
             label: "DispatchAsync (IncrementAction, two features, StateChanged subscribers)");
 
-        // Two warm-up dispatches plus 1000 measured ones, each notifying both subscribers.
-        Assert.Equal(2 * 1002, notifications);
+        // Every dispatch the gate made, warmup included, notified both subscribers. Counted, not
+        // assumed: how many warmup and measured calls the gate makes is up to the gate.
+        Assert.Equal(2 * dispatches, notifications);
         counter.StateChanged -= onCounter;
         badge.StateChanged -= onBadge;
     }
