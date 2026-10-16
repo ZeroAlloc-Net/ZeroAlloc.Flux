@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.2.0...v1.2.1) (2026-10-16)
+
+
+### Documentation
+
+* rewrite the readme as a product page ([#167](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/167)) ([e79e3e6](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/e79e3e6e933d63de2596545093e6cf7f048f936d))
+
 ## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.1.11...v1.2.0) (2026-10-15)
 
 
