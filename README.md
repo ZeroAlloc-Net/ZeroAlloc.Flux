@@ -78,7 +78,8 @@ The budgets hold for the library's own work; a record class feature allocates th
 
 ## Learn more
 
-- Documentation: [docs/](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/docs), starting with [getting started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/getting-started.md)
+- Documentation site: [flux.zeroalloc.net](https://flux.zeroalloc.net)
+- Documentation source: [docs/](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/docs), starting with [getting started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/getting-started.md)
 - Runnable examples: [`samples/`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/tree/main/samples) has a console app, a Blazor WebAssembly counter and the NativeAOT smoke test
 - Related packages: the [ZeroAlloc family](https://github.com/ZeroAlloc-Net), including [ZeroAlloc.Mediator](https://github.com/ZeroAlloc-Net/ZeroAlloc.Mediator) for request and notification dispatch
 - Contributing: issues and pull requests are welcome on [GitHub](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues)
