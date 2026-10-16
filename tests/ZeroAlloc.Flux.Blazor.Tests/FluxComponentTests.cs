@@ -66,6 +66,7 @@ public sealed class FluxComponentTests : Bunit.BunitContext
         Render<QuietCounter>();
         var dispatcher = Services.GetRequiredService<IDispatcher>();
         var action = new IncrementTestAction(1);
+        var dispatches = 0;
 
         await Renderer.Dispatcher.InvokeAsync(() =>
             AllocationGate.AssertBudget(
@@ -73,6 +74,7 @@ public sealed class FluxComponentTests : Bunit.BunitContext
                 iterations: 1000,
                 action: () =>
                 {
+                    dispatches++;
                     var t = dispatcher.DispatchAsync(action);
                     if (!t.IsCompletedSuccessfully)
                     {
@@ -83,6 +85,7 @@ public sealed class FluxComponentTests : Bunit.BunitContext
                 },
                 label: "DispatchAsync to a subscribed FluxComponent"));
 
-        Assert.Equal(1002, Services.GetRequiredService<IStore<TestCounterState>>().Value.Count);
+        // Every dispatch the gate made, warmup included, reached the store.
+        Assert.Equal(dispatches, Services.GetRequiredService<IStore<TestCounterState>>().Value.Count);
     }
 }
