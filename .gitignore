@@ -17,6 +17,8 @@ aot-out/
 TestResults/
 *.trx
 coverage.*
+# ...but not the coverage settings CI passes to dotnet test.
+!coverage.runsettings
 
 # JetBrains
 .idea/
