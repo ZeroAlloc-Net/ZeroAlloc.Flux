@@ -6,7 +6,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.13" />
     <ProjectReference Include="..\..\src\ZeroAlloc.Flux.Blazor\ZeroAlloc.Flux.Blazor.csproj" />
     <ProjectReference Include="..\..\src\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
