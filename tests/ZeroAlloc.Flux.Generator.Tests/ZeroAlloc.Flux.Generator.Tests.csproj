@@ -11,7 +11,7 @@
          attribute assembly into the AppDomain — fixture compilations need to bind those
          symbols. -->
     <ProjectReference Include="..\..\src\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />
-    <PackageReference Include="Basic.Reference.Assemblies.Net80" Version="1.8.12" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Basic.Reference.Assemblies.Net80" Version="1.8.13" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Basic.Reference.Assemblies.Net100" Version="1.8.13" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="coverlet.collector" Version="10.1.0">
