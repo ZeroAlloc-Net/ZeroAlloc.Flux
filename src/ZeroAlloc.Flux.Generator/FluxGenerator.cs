@@ -85,7 +85,8 @@ public sealed class FluxGenerator : IIncrementalGenerator
             spc.ReportDiagnostic(diagnostic.ToDiagnostic());
         }
 
-        if (model.Features.IsEmpty) return;
+        // The dispatcher and the AddZeroAllocFlux extension are emitted even with zero features, so
+        // a composition root that calls AddZeroAllocFlux compiles before the first feature exists.
 
         // Per-feature Store emit. We emit even for non-partial features so the generator's
         // output remains observable; the C# compiler will subsequently surface the partial
