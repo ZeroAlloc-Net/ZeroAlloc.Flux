@@ -48,7 +48,7 @@ public sealed class ServiceCollectionExtensionsEmitterTests
     private static void VerifyEmit(string source)
     {
         var (features, _, _) = Discovery.Run(source);
-        var emitted = ServiceCollectionExtensionsEmitter.Emit(features);
+        var emitted = ServiceCollectionExtensionsEmitter.Emit(features, isPublic: true);
         GeneratorSnapshot.VerifyText(emitted, "txt");
     }
 }

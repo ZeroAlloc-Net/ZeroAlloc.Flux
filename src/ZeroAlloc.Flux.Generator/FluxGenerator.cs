@@ -43,10 +43,11 @@ public sealed class FluxGenerator : IIncrementalGenerator
         public const string CollectedFeatures = "CollectedFeatures";
         public const string CollectedReducers = "CollectedReducers";
         public const string Combined = "Combined";
+        public const string UpstreamExtensions = "UpstreamExtensions";
 
         public static readonly string[] All =
         {
-            Features, Reducers, CollectedFeatures, CollectedReducers, Combined,
+            Features, Reducers, CollectedFeatures, CollectedReducers, Combined, UpstreamExtensions,
         };
     }
 
@@ -71,13 +72,22 @@ public sealed class FluxGenerator : IIncrementalGenerator
 
         var combined = features.Combine(reducers).WithTrackingName(TrackingNames.Combined);
 
-        context.RegisterSourceOutput(combined, static (spc, pair) => Execute(spc, pair.Left, pair.Right));
+        // Whether a referenced assembly already exposes AddZeroAllocFlux. A bool, so the step is
+        // cached for every edit that does not change the answer.
+        var upstream = context.CompilationProvider
+            .Select(static (compilation, _) => ReferencesAccessibleExtensions(compilation))
+            .WithTrackingName(TrackingNames.UpstreamExtensions);
+
+        context.RegisterSourceOutput(
+            combined.Combine(upstream),
+            static (spc, pair) => Execute(spc, pair.Left.Left, pair.Left.Right, pair.Right));
     }
 
     private static void Execute(
         SourceProductionContext spc,
         ImmutableArray<FeatureInfo?> rawFeatures,
-        ImmutableArray<ReducerCandidate?> rawReducers)
+        ImmutableArray<ReducerCandidate?> rawReducers,
+        bool upstreamExtensionsExist)
     {
         var model = FluxValidation.Validate(rawFeatures, rawReducers);
         foreach (var diagnostic in model.Diagnostics)
@@ -85,8 +95,13 @@ public sealed class FluxGenerator : IIncrementalGenerator
             spc.ReportDiagnostic(diagnostic.ToDiagnostic());
         }
 
-        // The dispatcher and the AddZeroAllocFlux extension are emitted even with zero features, so
-        // a composition root that calls AddZeroAllocFlux compiles before the first feature exists.
+        // With no feature the dispatcher and the AddZeroAllocFlux extension are still emitted, so a
+        // composition root written before the first feature compiles. They are internal then, and
+        // are skipped when a referenced assembly already exposes AddZeroAllocFlux: this generator
+        // runs in every project that references Flux, and a public copy in a host that only
+        // references a features library would shadow the library's method and register no store.
+        var hasFeatures = !model.Features.IsEmpty;
+        if (!hasFeatures && upstreamExtensionsExist) return;
 
         // Per-feature Store emit. We emit even for non-partial features so the generator's
         // output remains observable; the C# compiler will subsequently surface the partial
@@ -100,7 +115,27 @@ public sealed class FluxGenerator : IIncrementalGenerator
         var dispatcherSrc = DispatcherEmitter.Emit(model.Features, model.Reducers);
         spc.AddSource("FluxDispatcher.g.cs", SourceText.From(dispatcherSrc, Encoding.UTF8));
 
-        var diSrc = ServiceCollectionExtensionsEmitter.Emit(model.Features);
+        var diSrc = ServiceCollectionExtensionsEmitter.Emit(model.Features, isPublic: hasFeatures);
         spc.AddSource("FluxServiceCollectionExtensions.g.cs", SourceText.From(diSrc, Encoding.UTF8));
+    }
+
+    /// <summary>
+    /// True when a referenced assembly declares <c>ZeroAlloc.Flux.Generated.FluxServiceCollectionExtensions</c>
+    /// and this compilation can access it. Only references are searched, never this compilation's
+    /// own source.
+    /// </summary>
+    private static bool ReferencesAccessibleExtensions(Compilation compilation)
+    {
+        var metadataName = StoreEmitter.GeneratedNamespace + "." + ServiceCollectionExtensionsEmitter.ExtensionsClassName;
+        foreach (var assembly in compilation.SourceModule.ReferencedAssemblySymbols)
+        {
+            var type = assembly.GetTypeByMetadataName(metadataName);
+            if (type is not null && compilation.IsSymbolAccessibleWithin(type, compilation.Assembly))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
