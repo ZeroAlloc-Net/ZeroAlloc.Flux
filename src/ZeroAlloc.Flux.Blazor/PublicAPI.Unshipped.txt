@@ -1,1 +1,2 @@
 #nullable enable
+virtual ZeroAlloc.Flux.Blazor.FluxComponent.Dispose(bool disposing) -> void

@@ -55,3 +55,28 @@ public sealed class QuietCounter : FluxComponent
         builder.CloseElement();
     }
 }
+
+// A FluxComponent that extends disposal through the protected hook and counts its calls.
+public sealed class CleanupCounter : FluxComponent
+{
+    [Inject] public IStore<TestCounterState> Store { get; set; } = default!;
+
+    public int DisposeCalls { get; private set; }
+
+    public int StateChanges { get; private set; }
+
+    protected override void SubscribeStores() => Subscribe(Store, _ => StateChanges++);
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) DisposeCalls++;
+        base.Dispose(disposing);
+    }
+
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "p");
+        builder.AddContent(1, Store.Value.Count);
+        builder.CloseElement();
+    }
+}

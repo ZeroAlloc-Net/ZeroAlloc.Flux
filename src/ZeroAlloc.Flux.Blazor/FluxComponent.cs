@@ -40,7 +40,7 @@ public abstract class FluxComponent : ComponentBase, IDisposable
     /// <summary>
     /// Subscribes <paramref name="onChange"/> (default: <see cref="ComponentBase.StateHasChanged"/>)
     /// to <paramref name="store"/>'s <see cref="IStore{TState}.StateChanged"/> event. Registers
-    /// the unsubscribe so it runs on <see cref="Dispose"/>.
+    /// the unsubscribe so it runs on <see cref="Dispose()"/>.
     /// </summary>
     protected void Subscribe<TState>(IStore<TState> store, Action<TState>? onChange = null)
     {
@@ -60,9 +60,29 @@ public abstract class FluxComponent : ComponentBase, IDisposable
         SubscribeStores();
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Releases the component's store subscriptions. Blazor calls this when it disposes the
+    /// component. Override <see cref="Dispose(bool)"/> to add cleanup of your own.
+    /// </summary>
     public void Dispose()
     {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the resources the component holds. The base implementation removes every store
+    /// subscription made through <see cref="Subscribe{TState}"/>. An override disposes its own
+    /// resources and then calls <c>base.Dispose(disposing)</c>.
+    /// </summary>
+    /// <param name="disposing">
+    /// <see langword="true"/> when called from <see cref="Dispose()"/>; <see langword="false"/>
+    /// when called from a finalizer.
+    /// </param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposing) return;
+
         foreach (var unsub in _unsubscribers) unsub();
         _unsubscribers.Clear();
     }

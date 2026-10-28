@@ -53,6 +53,33 @@ public sealed class FluxComponentTests : Bunit.BunitContext
     }
 
     [Fact]
+    public async Task DerivedDisposeOverride_Runs_AndBaseStillUnsubscribes()
+    {
+        Services.AddZeroAllocFlux();
+        Services.AddZeroAllocFluxBlazor();
+
+        var component = Render<CleanupCounter>();
+        var instance = component.Instance;
+        var store = Services.GetRequiredService<IStore<TestCounterState>>();
+        var dispatcher = Services.GetRequiredService<IDispatcher>();
+
+        await dispatcher.DispatchAsync(new IncrementTestAction(1));
+        component.WaitForAssertion(() =>
+            Assert.Contains("<p>1</p>", component.Markup, System.StringComparison.Ordinal));
+        Assert.Equal(0, instance.DisposeCalls);
+        Assert.Equal(1, instance.StateChanges);
+
+        await DisposeComponentsAsync();
+
+        // The override ran exactly once, and the base unsubscribed: a later dispatch reaches the
+        // store but no longer reaches the disposed component's handler.
+        Assert.Equal(1, instance.DisposeCalls);
+        await dispatcher.DispatchAsync(new IncrementTestAction(1));
+        Assert.Equal(2, store.Value.Count);
+        Assert.Equal(1, instance.StateChanges);
+    }
+
+    [Fact]
     public async Task Dispatch_ToSubscribedComponent_ZeroAllocation()
     {
         // DispatchAsync -> Store.UpdateAsync -> StateChanged -> the FluxComponent handler, which
