@@ -89,6 +89,23 @@ public sealed class CounterView : FluxComponent
   another thread.
 - `FluxComponent` implements `IDisposable`. When Blazor disposes the component, it removes every
   handler it added, so a removed component receives no further changes.
+- To clean up resources of your own, such as a `CancellationTokenSource` or a timer, override
+  `protected virtual void Dispose(bool disposing)` and call `base.Dispose(disposing)`. Do not
+  re-implement `IDisposable` in the component: the base call is what removes the subscriptions.
+
+```csharp
+private readonly CancellationTokenSource _cts = new();
+
+protected override void Dispose(bool disposing)
+{
+    if (disposing)
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+    base.Dispose(disposing);
+}
+```
 
 ### React to a change
 
