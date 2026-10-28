@@ -183,7 +183,7 @@ public sealed class UnsupportedFeatureTests
     }
 
     [Fact]
-    public void OnlyUnsupportedFeatures_GenerateNothing()
+    public void OnlyUnsupportedFeatures_GenerateNoStores()
     {
         var outcome = GeneratorAssert.Run(("/src/App.cs", """
             using ZeroAlloc.Flux;
@@ -194,7 +194,7 @@ public sealed class UnsupportedFeatureTests
             """));
 
         Assert.Equal("ZFLUX006", Assert.Single(outcome.GeneratorDiagnostics).Id);
-        Assert.Empty(outcome.HintNames);
+        Assert.Equal(["FluxDispatcher.g.cs", "FluxServiceCollectionExtensions.g.cs"], outcome.HintNames);
         GeneratorAssert.NoCompilerErrors(outcome);
     }
 

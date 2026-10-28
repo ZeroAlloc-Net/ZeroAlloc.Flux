@@ -17,9 +17,13 @@
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
+  <!--
+    Build-order reference only. The generator is bundled into the package by the target below and
+    must not run over this library: it now always emits AddZeroAllocFlux, which would add an
+    unwanted public type to this assembly.
+  -->
   <ItemGroup>
     <ProjectReference Include="..\ZeroAlloc.Flux.Generator\ZeroAlloc.Flux.Generator.csproj"
-                      OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
 
