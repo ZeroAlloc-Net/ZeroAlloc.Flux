@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.2.2...v1.3.0) (2026-10-28)
+
+
+### Features
+
+* add protected virtual Dispose hook to FluxComponent ([#193](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/193)) ([14cafdf](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/14cafdf5e31b1fff0a67e1e55558986bcc304278))
+
+
+### Bug Fixes
+
+* always emit AddZeroAllocFlux and FluxDispatcher ([#192](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/192)) ([fc91be9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/fc91be9ffb7b7c73bda96542750da380ded6e77d))
+* stop a feature-less host from shadowing a referenced AddZeroAllocFlux ([#196](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/196)) ([fe79866](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/fe798661d0bff6bb9dacb550bd1fc2ca5945715e)), closes [#190](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/190)
+
 ## [1.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.2.1...v1.2.2) (2026-10-16)
 
 
