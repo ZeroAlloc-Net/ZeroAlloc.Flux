@@ -34,22 +34,28 @@ public sealed class FluxComponentTests : Bunit.BunitContext
         Services.AddZeroAllocFlux();
         Services.AddZeroAllocFluxBlazor();
 
-        var component = Render<TestCounter>();
+        var component = Render<CleanupCounter>();
+        var instance = component.Instance;
         var dispatcher = Services.GetRequiredService<IDispatcher>();
         var store = Services.GetRequiredService<IStore<TestCounterState>>();
 
-        var updatesAfterDispose = 0;
-        store.StateChanged += _ => updatesAfterDispose++;
+        var externalUpdates = 0;
+        store.StateChanged += _ => externalUpdates++;
 
-        component.Dispose();
+        await dispatcher.DispatchAsync(new IncrementTestAction(1));
+        Assert.Equal(1, instance.StateChanges);
+
+        // IRenderedComponent.Dispose does not dispose the component instance. Disposing the
+        // renderer's components does, and makes Blazor call IDisposable.Dispose on it.
+        await DisposeComponentsAsync();
+        Assert.Equal(1, instance.DisposeCalls);
 
         await dispatcher.DispatchAsync(new IncrementTestAction(1));
 
-        // The component's internal handler should NOT have fired. The component's markup
-        // should not have re-rendered (we can't easily check markup post-dispose, but
-        // we can verify the store's external subscriber DID fire — meaning the dispatch
-        // happened, but the FluxComponent's handler is gone).
-        Assert.Equal(1, updatesAfterDispose);
+        // The dispatch reached the store and an external subscriber, but not the component's
+        // handler: its subscription was removed on disposal.
+        Assert.Equal(2, externalUpdates);
+        Assert.Equal(1, instance.StateChanges);
     }
 
     [Fact]
