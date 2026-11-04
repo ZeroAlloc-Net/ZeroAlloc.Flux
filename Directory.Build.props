@@ -74,6 +74,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- Runs the IDE analyzers in the build, so .editorconfig severities such as IDE0250 apply. -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- NuGetAudit as ci-baseline runs it, so a local restore reports the same advisories as CI. -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>moderate</NuGetAuditLevel>
 </PropertyGroup>
   <!--
     README and icon are packed for every packable project. PackageIcon names the file as it
