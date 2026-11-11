@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
     <RootNamespace>ZeroAlloc.Flux.Blazor</RootNamespace>
     <PackageId>ZeroAlloc.Flux.Blazor</PackageId>
     <IsAotCompatible>true</IsAotCompatible>
@@ -16,6 +16,9 @@
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.14" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="11.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />

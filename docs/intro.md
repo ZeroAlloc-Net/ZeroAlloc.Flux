@@ -8,7 +8,7 @@ slug: /
 
 # ZeroAlloc.Flux
 
-ZeroAlloc.Flux is a source-generated Flux/Redux state management library for .NET 8 and .NET 10.
+ZeroAlloc.Flux is a source-generated Flux/Redux state management library for .NET 8, .NET 10 and .NET 11.
 You declare state, actions and reducers as plain C# types and static methods. A Roslyn source
 generator turns them into a store per state slice, one dispatcher for the whole assembly, and a DI
 registration method, all at compile time.

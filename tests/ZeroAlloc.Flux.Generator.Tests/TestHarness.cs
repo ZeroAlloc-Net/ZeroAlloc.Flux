@@ -97,7 +97,9 @@ internal static class TestHarness
     /// </remarks>
     public static List<MetadataReference> GetStandardReferences()
     {
-#if NET10_0_OR_GREATER
+#if NET11_0_OR_GREATER
+        var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net110.References.All);
+#elif NET10_0_OR_GREATER
         var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net100.References.All);
 #else
         var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net80.References.All);
