@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.3.0...v1.4.0) (2026-11-11)
+
+
+### Features
+
+* add net11.0 target ([#212](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/212)) ([b477bb1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/b477bb18f69479a2f6e454bbf0fdd31ecea69ec5))
+
+
+### Documentation
+
+* add context7.json to claim the library on Context7 ([#214](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/214)) ([774c541](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/774c541c447ad2c9b4940b97321ddeb0a8d80c7a))
+
 ## [1.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.2.2...v1.3.0) (2026-10-28)
 
 
