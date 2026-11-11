@@ -11,7 +11,7 @@ Source-generated Flux/Redux state management for .NET and Blazor, an alternative
 
 ## Why ZeroAlloc.Flux
 
-- **0 B per dispatch.** Dispatching an action, fanning it out to several features, notifying subscribers and reading the state allocate nothing; tests assert each path on net8.0 and net10.0, including dispatch to a store that a Blazor `FluxComponent` subscribes to.
+- **0 B per dispatch.** Dispatching an action, fanning it out to several features, notifying subscribers and reading the state allocate nothing; tests assert each path on net8.0, net10.0 and net11.0, including dispatch to a store that a Blazor `FluxComponent` subscribes to.
 - **Dispatch is generated code.** The dispatcher is built at compile time from your `[Reducer]` methods and resolves to a direct call per action type: no handler dictionary, no reflection.
 - **Works under NativeAOT and trimming.** CI publishes and runs a NativeAOT app, and builds a Blazor WebAssembly app, on every build.
 - **Compile-time diagnostics.** A wrong reducer signature, a duplicate reducer or a feature that is not `partial` stops the build with a `ZFLUX` error instead of failing at runtime.
@@ -63,7 +63,7 @@ State is a record, actions are plain types with no marker interface, and reducer
 - **Effects as plain services** that inject `IDispatcher`, do async work and dispatch the result. [Effects](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/core-concepts.md#effects)
 - **Blazor support**: `ZeroAlloc.Flux.Blazor` adds `FluxComponent`, which re-renders when a store it subscribes to changes. [Blazor guide](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/blazor.md)
 - **Build-time checks**, ZFLUX001 to ZFLUX009. [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/blob/main/docs/diagnostics.md)
-- **Targets** `net8.0` and `net10.0`.
+- **Targets** `net8.0`, `net10.0` and `net11.0`.
 
 ## Performance
 

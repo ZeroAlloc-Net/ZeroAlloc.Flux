@@ -14,7 +14,7 @@ dotnet add package ZeroAlloc.Flux
 ```
 
 The source generator ships inside `ZeroAlloc.Flux`, so this one package reference gives you the
-runtime types and the generator. Both packages target `net8.0` and `net10.0`.
+runtime types and the generator. Both packages target `net8.0`, `net10.0` and `net11.0`.
 
 For a Blazor app, also add the Blazor adapter; see [Blazor](blazor.md):
 
