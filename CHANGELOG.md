@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.4.0...v1.4.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* embed PDBs so Go to Definition shows the package source ([#233](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/issues/233)) ([1d4ff4e](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/1d4ff4e52c524b21f38a81b66d1355c360f5b764))
+
 ## [1.4.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.3.0...v1.4.0) (2026-11-11)
 
 
