@@ -24,7 +24,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.12.0" />
   </ItemGroup>
 
   <!-- Snapshots are data, not code. Verify's targets excluded them from compilation; without
