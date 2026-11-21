@@ -99,10 +99,8 @@ internal static class TestHarness
     {
 #if NET11_0_OR_GREATER
         var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net110.References.All);
-#elif NET10_0_OR_GREATER
-        var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net100.References.All);
 #else
-        var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net80.References.All);
+        var references = new List<MetadataReference>(Basic.Reference.Assemblies.Net100.References.All);
 #endif
 
         // The fixtures bind [Feature] / [Reducer], so the runtime assembly has to be present.

@@ -93,7 +93,6 @@ jobs:
       solution: ZeroAlloc.Flux.slnx
       # Runtimes the tests target, besides the SDK that global.json pins.
       dotnet-version: |
-        8.0.x
         10.0.x
         11.0.x
       github-packages: false
@@ -143,8 +142,8 @@ jobs:
         with:
           global-json-file: global.json
           dotnet-version: |
-            8.0.x
             10.0.x
+            11.0.x
 
       - name: Build the release
         run: dotnet build ZeroAlloc.Flux.slnx -c Release -p:Version=${{ needs.release-please.outputs.version }}

@@ -5,7 +5,7 @@ Source-generated Flux/Redux state management for .NET and Blazor. Users write `[
 ## Layout
 
 - `src/ZeroAlloc.Flux.Generator` targets `netstandard2.0`, is not packable, and is bundled into the `ZeroAlloc.Flux` package under `analyzers/dotnet/cs` by the `IncludeGeneratorInPackage` target. `ZeroAlloc.Flux` references it with `ReferenceOutputAssembly="false"` on purpose: the generator must not run over the library itself.
-- `src/ZeroAlloc.Flux` and `src/ZeroAlloc.Flux.Blazor` multi-target `net8.0;net10.0;net11.0`. Both track their public API in `PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt`; RS0016 and RS0017 are errors, so a new or removed public member needs an Unshipped entry.
+- `src/ZeroAlloc.Flux` and `src/ZeroAlloc.Flux.Blazor` multi-target `net10.0;net11.0`. Both track their public API in `PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt`; RS0016 and RS0017 are errors, so a new or removed public member needs an Unshipped entry.
 - The generator reports ZFLUX001 to ZFLUX009, tracked in `src/ZeroAlloc.Flux.Generator/AnalyzerReleases.Unshipped.md` and documented in `docs/diagnostics.md`. A new or changed diagnostic updates all three.
 - `Directory.Build.targets` promotes `ZeroAlloc.Pipeline.Generators` and `ZeroAlloc.Pipeline` to analyzer dependencies; without it Roslyn cannot load the generator's dependencies.
 - `samples/` holds `Sample`, `AotSmoke` (NativeAOT publish) and `WasmSmoke` (Blazor WebAssembly). They are not packed. `samples/Directory.Build.props` disables MA0048 there on purpose.
@@ -14,7 +14,7 @@ Source-generated Flux/Redux state management for .NET and Blazor. Users write `[
 
 ## Build and test
 
-`global.json` pins SDK `11.0.100` with `rollForward: latestMinor`. The test projects target `net8.0`, `net10.0` and `net11.0`, so a machine needs the .NET 8, 10 and 11 runtimes (ASP.NET Core 8, 10 and 11 for the Blazor tests), not only the SDK.
+`global.json` pins SDK `11.0.100` with `rollForward: latestMinor`. The test projects target `net10.0` and `net11.0`, so a machine needs the .NET 10 and 11 runtimes (ASP.NET Core 10 and 11 for the Blazor tests), not only the SDK.
 
 CI job `build` in `ci.yml` (`VERSION` is the GitVersion SemVer; `dotnet tool restore` then `dotnet gitversion /showvariable SemVer`):
 
@@ -41,8 +41,8 @@ Fast inner loop, run in `REPO_DIR` and passing:
 
 ```bash
 dotnet build ZeroAlloc.Flux.slnx -c Release
-dotnet test tests/ZeroAlloc.Flux.Generator.Tests --no-build -c Release -f net8.0
-dotnet test tests/ZeroAlloc.Flux.Tests --no-build -c Release -f net8.0 --filter "FullyQualifiedName~AllocationBudget"
+dotnet test tests/ZeroAlloc.Flux.Generator.Tests --no-build -c Release -f net10.0
+dotnet test tests/ZeroAlloc.Flux.Tests --no-build -c Release -f net10.0 --filter "FullyQualifiedName~AllocationBudget"
 ```
 
 ## Conventions and gotchas
