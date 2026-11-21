@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
@@ -11,7 +11,6 @@
          attribute assembly into the AppDomain — fixture compilations need to bind those
          symbols. -->
     <ProjectReference Include="..\..\src\ZeroAlloc.Flux\ZeroAlloc.Flux.csproj" />
-    <PackageReference Include="Basic.Reference.Assemblies.Net80" Version="1.8.15" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Basic.Reference.Assemblies.Net100" Version="1.8.15" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Basic.Reference.Assemblies.Net110" Version="1.8.15" Condition="'$(TargetFramework)' == 'net11.0'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />

@@ -9,16 +9,6 @@
   ],
   "packageRules": [
     {
-      "description": "Skip EFCore major bumps \u2014 EFCore 10 dropped net8.0 support; pin via Directory.Packages.props per-TFM until we drop net8.0.",
-      "matchPackagePrefixes": [
-        "Microsoft.EntityFrameworkCore"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "enabled": false
-    },
-    {
       "description": "Ignore internal ZeroAlloc packages \u2014 managed by release-please",
       "matchPackagePrefixes": [
         "ZeroAlloc."
