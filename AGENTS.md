@@ -45,7 +45,26 @@ dotnet test tests/ZeroAlloc.Flux.Generator.Tests --no-build -c Release -f net10.
 dotnet test tests/ZeroAlloc.Flux.Tests --no-build -c Release -f net10.0 --filter "FullyQualifiedName~AllocationBudget"
 ```
 
+CI job `sdk10-consumer` needs a 10.0.1xx SDK; `tests/ZeroAlloc.Flux.Sdk10Smoke/global.json` pins
+10.0.100 with `rollForward: latestPatch`, so a newer band cannot stand in for it. It builds and runs a
+consumer of the packed packages with Roslyn 5.0:
+
+```bash
+v=9.9.9-local.sha$(git rev-parse --short HEAD).$(date +%s)
+dotnet pack src/ZeroAlloc.Flux -c Release -o artifacts -p:Version="$v"
+cd tests/ZeroAlloc.Flux.Sdk10Smoke/Consumer
+dotnet run -c Release -p:ZeroAllocFluxVersion="$v"
+```
+
+CI job `roslyn-floor` calls the shared `roslyn-floor.yml` from ZeroAlloc-Net/.github: it packs the
+solution and fails when a packed DLL references Roslyn above 5.0.0.
+
 ## Conventions and gotchas
+- The generator references `Microsoft.CodeAnalysis.CSharp` 5.0.0, the compiler of SDK band 10.0.1xx, the
+  oldest supported SDK. A compiler older than the Roslyn the generator references skips it with `CS9057`,
+  and nothing is generated. The shared Renovate preset holds it below 5.1. If a newer Roslyn API is
+  needed, change the code; raise the floor only together with the minimum SDK. Test projects may use a
+  newer Roslyn.
 
 - `TreatWarningsAsErrors` and `EnforceCodeStyleInBuild` are on, with Meziantou, Roslynator and ZeroAlloc analyzers on every non-`netstandard2.0` project. Fix a warning at its source; do not suppress it.
 - `dotnet pack` fails with ZAVERSION001 or ZAVERSION002 unless the version comes from `-p:Version` or `-p:PackageVersion`, and the assemblies being packed must carry that same version. When packing with `--no-build`, pass `-p:Version` to the build step too. A bare local `dotnet pack` is expected to fail.

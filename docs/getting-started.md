@@ -16,6 +16,8 @@ dotnet add package ZeroAlloc.Flux
 The source generator ships inside `ZeroAlloc.Flux`, so this one package reference gives you the
 runtime types and the generator. Both packages target `net10.0` and `net11.0`.
 
+The generator needs the .NET 10 SDK 10.0.100 or later, or Visual Studio 2026 or later. It is built against Roslyn 5.0, and an older compiler skips it with warning CS9057, after which the generated registrations and stores are missing. Version 2.0.0 was built against Roslyn 5.12 and loads only in the .NET 11 SDK; on .NET 10, use 2.0.1 or later.
+
 For a Blazor app, also add the Blazor adapter; see [Blazor](blazor.md):
 
 ```bash
