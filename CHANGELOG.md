@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.4.1...v2.0.0) (2026-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* ZeroAlloc.Flux and ZeroAlloc.Flux.Blazor no longer ship net8.0 assets, so consumers must target net10.0 or later. See the Behaviour change section of the PR for migration steps.
+
+### Features
+
+* target net10.0 and net11.0, drop net8.0 ([087f195](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/commit/087f195830261740e48c86e3531ea2c49118cca2))
+
 ## [1.4.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Flux/compare/v1.4.0...v1.4.1) (2026-11-16)
 
 
